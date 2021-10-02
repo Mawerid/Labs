@@ -1,4 +1,4 @@
-cipher: main.c
-	gcc -c main.c
+all:
+	gcc -Wall -o cipher main.c cryptaes.c
 clean:
 	rm if *.o
