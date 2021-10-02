@@ -1,5 +1,7 @@
 #include "cryptaes.h"
 
+#define KEYCOUNT 3
+
 int main() {
     FILE *in;
     in = fopen("input.txt", "r");
