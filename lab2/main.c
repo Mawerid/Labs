@@ -1,8 +1,7 @@
 #include "cryptaes.h"
+#include "otherfun.h"
 
 #define KEYCOUNT 3
-
-unsigned str_hex(const char* str);
 
 int main() {
     char * filename = "input.txt";
@@ -40,7 +39,7 @@ int main() {
                 hex_block[j] = '0';
         }
     }
-    if (i != 0) {
+    if (i > 2) {
         inf_block = str_hex(hex_block);
         if (typeisecb) {
             cipher = ecb(key, inf_block, enc);
@@ -53,20 +52,5 @@ int main() {
     }
     printf("\n");
     return 0;
-}
-
-unsigned str_hex(const char * str){
-    const char * ptr;
-    unsigned num;
-    num = 0;
-    for (ptr = str; *ptr; ptr++) {
-        if (*ptr >= '0' && *ptr <= '9')
-            num = (num << 4) | (unsigned int)(*ptr - '0');
-        else if (*ptr >= 'A' && *ptr <= 'F')
-            num = (num << 4) | (unsigned int)(*ptr - 'A' + 10);
-        else if (*ptr >= 'a' && *ptr <= 'f')
-            num = (num << 4) | (unsigned int)(*ptr - 'a' + 10);
-    }
-    return num;
 }
 
