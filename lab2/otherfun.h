@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include <unistd.h>
+#include <getopt.h>
+#include <string.h>
 
-unsigned str_hex(const char* str);
+unsigned str_hex(const char *str);
 
-
+void help();
