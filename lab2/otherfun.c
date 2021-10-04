@@ -17,5 +17,21 @@ unsigned str_hex(const char *str){
 
 
 void help() {
-	printf("HELP!!!!\n");
+	printf("\nThis is Encoder/Decoder. It use AES algorythm.\n");
+	printf("To use it properly, please, make sure that your input file (Open text) is in HEX format.\n");
+	printf("\n-----------------------\n");
+	printf("This program require this parameters for work: \n");
+	printf("1)'--mode' or '-m' with argument ECB (Electronic Codebook) or CBC (Cipher Block Chaining) \n(This need to know mode of encoding/decoding)\n");
+	printf("2) '--enc' or '-e' to be in encoding mode\n");
+	printf("3) '--dec' or '-d' to be in decoding mode\n");
+	printf("Be carefully, you need to enter only one of the first two parameters.\n");
+	printf("4) '--key' or '-k' to enter a key (Key 0)\n");
+	printf("5) '--iv' or '-i' to enter a init vector (only if you choose CBC mode)\n");
+	printf("After all parameters you should enter name of input file (don't be mistaken).\n");
+	printf("\n-----------------------\n");
+	printf("Additional func: \n");
+	printf("6) '--debug' or '-g' to start in debug mode of this program\n");
+	printf("7) '--version' or '-v' show the version of this program\n");
+	printf("8) '--help' or '-h' show this message\n");
+	printf("\n-----------------------\n");
 }
