@@ -8,11 +8,13 @@ int main(int argc, char **argv) {
 
     unsigned init_vector = 0;
     unsigned key0 = 0;
-    int enc = 1;
+    
+    int enc = 2;
     int typeisecb = 1;
     int debug_mode = 0;
-    opterr = 0;
     int need2done = 1;
+    
+    opterr = 0;
     
 	const char *short_options = "hvm:edk:i:g";
 	const struct option long_options[] = {
@@ -23,7 +25,8 @@ int main(int argc, char **argv) {
 		{"dec", no_argument, NULL, 'd'},
 		{"key", required_argument, NULL, 'k'},
 		{"iv", required_argument, NULL, 'i'},
-		{"debug", no_argument, NULL, 'g'}
+		{"debug", no_argument, NULL, 'g'}, 
+		{NULL, 0, NULL, 0}
 	};	
 	
 	int rez;
@@ -50,6 +53,7 @@ int main(int argc, char **argv) {
 				break;
 			};
 			case 'e': {
+				enc = 1;
 				break;
 			};
 			case 'd': {
@@ -81,6 +85,9 @@ int main(int argc, char **argv) {
     if (!need2done) 
     	return 0;
     
+    else if (enc == 2)
+    	printf("Please, enter mode (encoding or decoding)\nUse --help (or -h) to get documentation\n");
+    
 	else if (key0 == 0 || (typeisecb == 0 && init_vector == 0))
 		printf("Invalid key or init vector\nPlease, try one more time\n");
 	
@@ -95,18 +102,59 @@ int main(int argc, char **argv) {
 	    unsigned key[KEYCOUNT] = {key0, 0, 0};
 	    unsigned cipher;
 
-	    generate_keys(key[0],&key[1],&key[2]);
+	    generate_keys(key[0], &key[1], &key[2]);
+	    
+	    if (debug_mode) {
+	    	printf("\n-----------------------\n");
+	    	if (typeisecb)
+	    		printf("This is AES in Electronic Codebook mode of ");
+	    	else 
+	    		printf("This is AES in Cipher block chaining mode of ");
+	    	
+	    	if (enc)
+	    		printf("encoding\n");
+	    	else
+	    		printf("decoding\n");
+	    	printf("-----------------------\n");
+	    	for (int j = 0; j < KEYCOUNT; j++)
+	    		printf("Key %d value: %x\n", j, key[j]);
+	    }
 
 	    while ((c = fgetc(in)) != EOF) {
 	        hex_block[i] = c;
 	        i++;
 	        if (i == 8) {
 	            inf_block = str_hex(hex_block);
+	            
+	            if (debug_mode) {
+	            	printf("\n-----------------------\n");
+	            	printf("Just read this block of information:      %s\n", hex_block);
+	            }
+	            
 	            if (typeisecb) {
 	                cipher = ecb(key, inf_block, enc);
+	                
+	                if (debug_mode) {
+	                	printf("This block of information after ");
+	                	if (enc)
+	    					printf("encoding: ");
+	    				else
+	    					printf("decoding: ");
+	    			}
+	    			
 	                printf("%x", cipher);
 	            } else {
 	                cipher = cbc(key, inf_block, init_vector, enc);
+	                
+	                if (debug_mode) {
+	                	printf("Use init vector: %u\n", init_vector);
+	                	printf("This block of information after ");
+	                	if (enc)
+	    					printf("encoding: ");
+	    				else
+	    					printf("decoding: ");
+	    			}
+	    			
 	                init_vector = cipher;
 	                printf("%x", cipher);
 	            }
@@ -117,16 +165,51 @@ int main(int argc, char **argv) {
 	    }
 	    if (i > 2) {
 	        inf_block = str_hex(hex_block);
+	        
+	        if (debug_mode) {
+	           	printf("\n-----------------------\n");
+	           	printf("\nJust read this block of information:      %s\n", hex_block);
+	        }
+	            
 	        if (typeisecb) {
 	            cipher = ecb(key, inf_block, enc);
+	            
+	            if (debug_mode) {
+	               	printf("This block of information after ");
+	               	if (enc)
+	  					printf("encoding: ");
+	    			else
+	    				printf("decoding: ");
+	    		}
+	    		
 	            printf("%x", cipher);
 	        } else {
 	            cipher = cbc(key, inf_block, init_vector, enc);
+	            
+	            if (debug_mode) {
+	               	printf("Use init vector: %u\n", init_vector);
+	               	printf("This block of information after ");
+	               	if (enc)
+	   					printf("encoding: ");
+	    			else
+	    				printf("decoding: ");
+	    		}
+	    		
 	            init_vector = cipher;
 	            printf("%x", cipher);
 	        }
     	}
+    	
 	    printf("\n");
+	    if (debug_mode) {
+	    	printf("\n-----------------------\n");
+	        printf("This is the end of ");
+	        if (enc)
+	   			printf("encoding.\n");
+	    	else
+	 			printf("decoding.\n");
+	    }
+	    fclose(in);
     }
     return 0;
 }
