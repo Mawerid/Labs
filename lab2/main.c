@@ -13,6 +13,8 @@ int main(int argc, char **argv) {
     int typeisecb = 1;
     int debug_mode = 0;
     int need2done = 1;
+    int iskey = 0;
+    int isiv = 0;
     
     opterr = 0;
     
@@ -62,10 +64,12 @@ int main(int argc, char **argv) {
 			};
 			case 'k': {
 				key0 = str_hex(optarg);
+				iskey = 1;
 				break;
 			};
 			case 'i': {
 				init_vector = str_hex(optarg);
+				isiv = 1;
 				break;
 			};
 			case 'g': {
@@ -88,7 +92,7 @@ int main(int argc, char **argv) {
     else if (enc == 2)
     	printf("Please, enter mode (encoding or decoding)\nUse --help (or -h) to get documentation\n");
     
-	else if (key0 == 0 || (typeisecb == 0 && init_vector == 0))
+    else if (!(iskey) || (typeisecb == 0 && isiv == 0))
 		printf("Invalid key or init vector\nPlease, try one more time\n");
 	
 	else if ((in = fopen(filename, "r")) == NULL)
@@ -132,7 +136,7 @@ int main(int argc, char **argv) {
 	            }
 	            
 	            if (typeisecb) {
-	                cipher = ecb(key, inf_block, enc);
+	                cipher = ecb(key, inf_block, enc, debug_mode);
 	                
 	                if (debug_mode) {
 	                	printf("This block of information after ");
@@ -142,9 +146,9 @@ int main(int argc, char **argv) {
 	    					printf("decoding: ");
 	    			}
 	    			
-	                printf("%x", cipher);
+	                printf("%08x", cipher);
 	            } else {
-	                cipher = cbc(key, inf_block, init_vector, enc);
+	                cipher = cbc(key, inf_block, init_vector, enc, debug_mode);
 	                
 	                if (debug_mode) {
 	                	printf("Use init vector: %u\n", init_vector);
@@ -155,8 +159,11 @@ int main(int argc, char **argv) {
 	    					printf("decoding: ");
 	    			}
 	    			
-	                init_vector = cipher;
-	                printf("%x", cipher);
+	    			if (!enc)
+	    				init_vector = inf_block;
+	    			else
+	                	init_vector = cipher;
+	                printf("%08x", cipher);
 	            }
 	            i = 0;
 	            for (int j = 0; j < 8; j++)
@@ -172,31 +179,30 @@ int main(int argc, char **argv) {
 	        }
 	            
 	        if (typeisecb) {
-	            cipher = ecb(key, inf_block, enc);
+	            cipher = ecb(key, inf_block, enc, debug_mode);
 	            
 	            if (debug_mode) {
-	               	printf("This block of information after ");
-	               	if (enc)
+	               printf("This block of information after ");
+	               if (enc)
 	  					printf("encoding: ");
-	    			else
-	    				printf("decoding: ");
+	    		   else
+	    		   		printf("decoding: ");
 	    		}
 	    		
-	            printf("%x", cipher);
+	            printf("%08x", cipher);
 	        } else {
-	            cipher = cbc(key, inf_block, init_vector, enc);
+	            cipher = cbc(key, inf_block, init_vector, enc, debug_mode);
 	            
 	            if (debug_mode) {
-	               	printf("Use init vector: %u\n", init_vector);
-	               	printf("This block of information after ");
-	               	if (enc)
+	               printf("Use init vector: %u\n", init_vector);
+	               printf("This block of information after ");
+	               if (enc)
 	   					printf("encoding: ");
-	    			else
-	    				printf("decoding: ");
+	    		   else
+	    			   	printf("decoding: ");
 	    		}
 	    		
-	            init_vector = cipher;
-	            printf("%x", cipher);
+	            printf("%08x", cipher);
 	        }
     	}
     	

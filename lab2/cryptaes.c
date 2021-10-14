@@ -43,7 +43,7 @@ const int s_boxInv_table[] = {
         0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
 };
 
-void generate_keys(unsigned k0, unsigned *k1, unsigned *k2);
+unsigned encryption(unsigned key, unsigned inf_block, int enc, int debug_mode);
 
 void add(unsigned *key, unsigned i);
 
@@ -77,59 +77,94 @@ unsigned s_box(unsigned inf_block, int enc) {
     return cipher;
 }
 
-unsigned encryption(unsigned key, unsigned inf_block, int enc) {
+unsigned encryption(unsigned key, unsigned inf_block, int enc, int debug_mode) {
     unsigned cipher;
 
     if (enc) {
         cipher = s_box(inf_block, enc);
+        
+        if (debug_mode) {
+        	printf("-----------------------\n");
+    		printf("Information after S box:                  %08x\n", cipher);
+    	}
 
         cipher = (cipher / (FF * FF)) * (FF * FF) + (cipher % FF) * FF + ((cipher / FF) % FF);
+        
+        if (debug_mode) {
+        	printf("-----------------------\n");
+    		printf("Information after cycle shift:            %08x\n", cipher);
+        }
 
         cipher ^= key;
+        
+        if (debug_mode) {
+        	printf("-----------------------\n");
+    		printf("Information after XOR with key:           %08x\n", cipher);
+    		printf("-----------------------\n");
+        }
+        
     } else {
         cipher = key ^ inf_block;
+        
+        if (debug_mode) {
+        	printf("-----------------------\n");
+    		printf("Information after XOR with key:           %08x\n", cipher);
+        }
 
         cipher = (cipher / (FF * FF)) * (FF * FF) + (cipher % FF) * FF + ((cipher / FF) % FF);
+        
+        if (debug_mode) {
+        	printf("-----------------------\n");
+    		printf("Information after cycle shift:            %08x\n", cipher);
+        }
 
         cipher = s_box(cipher, enc);
+        
+        if (debug_mode) {
+        	printf("-----------------------\n");
+    		printf("Information after reverse S box:          %08x\n", cipher);
+    		printf("-----------------------\n");
+    	}
     }
     return cipher;
 }
 
-unsigned ecb(unsigned key[], unsigned inf_block, int enc) {
+unsigned ecb(unsigned key[], unsigned inf_block, int enc, int debug_mode) {
     unsigned cipher;
 
     if (enc) {
         cipher = key[0] ^ inf_block;
 
-        for (int i = 1; i < KEYCOUNT; i++)
-            cipher = encryption(key[i], cipher, enc);
+        for (int i = 1; i < KEYCOUNT; i++) 
+            cipher = encryption(key[i], cipher, enc, debug_mode);
+            
     } else {
         cipher = inf_block;
 
         for (int i = (KEYCOUNT-1); i > 0; i--)
-            cipher = encryption(key[i], cipher, enc);
+            cipher = encryption(key[i], cipher, enc, debug_mode);
+            
         cipher ^= key[0];
     }
 
     return cipher;
 }
 
-unsigned cbc(unsigned key[], unsigned inf_block, unsigned init_vector, int enc) {
+unsigned cbc(unsigned key[], unsigned inf_block, unsigned init_vector, int enc, int debug_mode) {
     unsigned cipher;
 
     if (enc) {
         cipher = key[0] ^ (init_vector ^ inf_block);
 
         for (int i = 1; i < KEYCOUNT; i++) {
-            cipher = encryption(key[i], cipher, enc);
+            cipher = encryption(key[i], cipher, enc, debug_mode);
         }
     } else {
         cipher = inf_block;
 
         for (int i = (KEYCOUNT-1); i > 0; i--)
-            cipher = encryption(key[i], cipher, enc);
-        cipher ^= key[0] ^ inf_block;
+            cipher = encryption(key[i], cipher, enc, debug_mode);
+        cipher ^= key[0] ^ init_vector;
     }
 
     return cipher;

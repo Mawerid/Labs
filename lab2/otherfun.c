@@ -34,4 +34,8 @@ void help() {
 	printf("7) '--version' or '-v' show the version of this program\n");
 	printf("8) '--help' or '-h' show this message\n");
 	printf("\n-----------------------\n");
+	printf("Here example of using this program:\n");
+	printf("./cipher --mod=ecb --enc --key=ffffffff input.txt\n");
+	printf("./cipher --mod=cbc --dec --key=ffffffff --iv=00000000 input.txt\n");
+	printf("\n-----------------------\n");
 }
