@@ -15,6 +15,16 @@ unsigned str_hex(const char *str){
     return num;
 }
 
+void generate_data(const char *filename) {
+	FILE *file;
+	srand (time(NULL));
+	file = fopen(filename, "w");
+	
+	for (int i = 0; i < 100000; i++)
+		fprintf(file, "%08x", (unsigned) (rand() % (0xffffffff)));
+	
+	fclose(file);
+}
 
 void help() {
 	printf("\nThis is Encoder/Decoder. It use AES algorythm.\n");
@@ -33,6 +43,8 @@ void help() {
 	printf("6) '--debug' or '-g' to start in debug mode of this program\n");
 	printf("7) '--version' or '-v' show the version of this program\n");
 	printf("8) '--help' or '-h' show this message\n");
+	printf("9) '--speedtest' or '-s' show the time of coding/decoding 100000 blocks of information on your computer\n");
+	printf("NOTE: if you use speedtest mode, be carefull, because all information in your input file will be change.\n");
 	printf("\n-----------------------\n");
 	printf("Here example of using this program:\n");
 	printf("./cipher --mod=ecb --enc --key=ffffffff input.txt\n");

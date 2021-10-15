@@ -15,10 +15,11 @@ int main(int argc, char **argv) {
     int need2done = 1;
     int iskey = 0;
     int isiv = 0;
+    int speed_test = 0;
     
     opterr = 0;
     
-	const char *short_options = "hvm:edk:i:g";
+	const char *short_options = "hvm:edk:i:gs";
 	const struct option long_options[] = {
 		{"help", no_argument, NULL, 'h'},
 		{"version", no_argument, NULL, 'v'},
@@ -27,7 +28,8 @@ int main(int argc, char **argv) {
 		{"dec", no_argument, NULL, 'd'},
 		{"key", required_argument, NULL, 'k'},
 		{"iv", required_argument, NULL, 'i'},
-		{"debug", no_argument, NULL, 'g'}, 
+		{"debug", no_argument, NULL, 'g'},
+		{"speedtest", no_argument, NULL, 's'}, 
 		{NULL, 0, NULL, 0}
 	};	
 	
@@ -76,6 +78,10 @@ int main(int argc, char **argv) {
 				debug_mode = 1;
 				break;
 			};
+			case 's': {
+				speed_test = 1;
+				break;
+			};
 			case '?': default: {
 				printf("Found unknown option\nPlease, use --help (or -h) to get documentation\n");
 				break;
@@ -86,9 +92,12 @@ int main(int argc, char **argv) {
     char *filename = argv[argc-1];
     FILE *in;
     
+	if (speed_test)
+		generate_data(filename);
+		
     if (!need2done) 
     	return 0;
-    
+		
     else if (enc == 2)
     	printf("Please, enter mode (encoding or decoding)\nUse --help (or -h) to get documentation\n");
     
@@ -105,7 +114,8 @@ int main(int argc, char **argv) {
 	    unsigned inf_block;
 	    unsigned key[KEYCOUNT] = {key0, 0, 0};
 	    unsigned cipher;
-
+	    
+    	clock_t begin = clock();
 	    generate_keys(key[0], &key[1], &key[2]);
 	    
 	    if (debug_mode) {
@@ -146,7 +156,9 @@ int main(int argc, char **argv) {
 	    					printf("decoding: ");
 	    			}
 	    			
-	                printf("%08x", cipher);
+	    			if (!(speed_test))
+	                	printf("%08x", cipher);
+	                
 	            } else {
 	                cipher = cbc(key, inf_block, init_vector, enc, debug_mode);
 	                
@@ -163,7 +175,9 @@ int main(int argc, char **argv) {
 	    				init_vector = inf_block;
 	    			else
 	                	init_vector = cipher;
-	                printf("%08x", cipher);
+	                	
+	                if (!(speed_test))
+	                	printf("%08x", cipher);
 	            }
 	            i = 0;
 	            for (int j = 0; j < 8; j++)
@@ -189,7 +203,8 @@ int main(int argc, char **argv) {
 	    		   		printf("decoding: ");
 	    		}
 	    		
-	            printf("%08x", cipher);
+	    		if (!(speed_test))
+	            	printf("%08x", cipher);
 	        } else {
 	            cipher = cbc(key, inf_block, init_vector, enc, debug_mode);
 	            
@@ -202,7 +217,8 @@ int main(int argc, char **argv) {
 	    			   	printf("decoding: ");
 	    		}
 	    		
-	            printf("%08x", cipher);
+	    		if (!(speed_test))
+	            	printf("%08x", cipher);
 	        }
     	}
     	
@@ -215,6 +231,28 @@ int main(int argc, char **argv) {
 	    	else
 	 			printf("decoding.\n");
 	    }
+	    
+	    clock_t end = clock();
+	    
+	    if (speed_test) {
+	    	double time_in_seconds = (double) (end - begin) * 1000.0 / CLOCKS_PER_SEC; 
+	    	printf("-----------------------\n");
+	    	if (typeisecb)
+	    		printf("This is AES in Electronic Codebook mode of ");
+	    	else 
+	    		printf("This is AES in Cipher block chaining mode of ");
+	    	
+	    	if (enc)
+	    		printf("encoding\n");
+	    	else
+	    		printf("decoding\n");
+	    	
+	    	printf("\n-----------------------\n");
+	    	printf("All this 100000 blocks of information was processed for   %3.3f  ms\n", time_in_seconds);
+	    	printf("Average time of processing 1 block                    %3.8f  ms\n", (time_in_seconds/100000));
+	    	printf("\nYou can check your computer's specifications in setting (on Linux try type 'hardinfo | less')\n\n");
+	    }
+	    
 	    fclose(in);
     }
     return 0;
