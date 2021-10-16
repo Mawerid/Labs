@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
 	    	
 	    	printf("\n-----------------------\n");
 	    	printf("All this 100000 blocks of information was processed for   %3.3f  ms\n", time_in_seconds);
-	    	printf("Average number of blocks per second                   %f  ms\n", (1000/(time_in_seconds/100000)));
+	    	printf("Average number of blocks per second                      %.0f\n", (1000/(time_in_seconds/100000)));
 	    	printf("\nYou can check your computer's specifications in setting (on Linux try type 'hardinfo | less')\n\n");
 	    }
 	    
