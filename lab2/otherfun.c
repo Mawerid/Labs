@@ -3,15 +3,27 @@
 unsigned str_hex(const char *str){
     const char *ptr;
     unsigned num;
+    int num_of_simb;
+    num_of_simb = 8;
     num = 0;
+    
     for (ptr = str; *ptr; ptr++) {
-        if (*ptr >= '0' && *ptr <= '9')
+        if (*ptr >= '0' && *ptr <= '9') {
             num = (num << 4) | (unsigned int)(*ptr - '0');
-        else if (*ptr >= 'A' && *ptr <= 'F')
+            num_of_simb--;
+        }
+        else if (*ptr >= 'A' && *ptr <= 'F') {
             num = (num << 4) | (unsigned int)(*ptr - 'A' + 10);
-        else if (*ptr >= 'a' && *ptr <= 'f')
+            num_of_simb--;
+        }
+        else if (*ptr >= 'a' && *ptr <= 'f') {
             num = (num << 4) | (unsigned int)(*ptr - 'a' + 10);
+            num_of_simb--;
+        }
     }
+    
+    num <<= (num_of_simb*4);
+    
     return num;
 }
 
