@@ -169,3 +169,15 @@ unsigned cbc(unsigned key[], unsigned inf_block, unsigned init_vector, int enc, 
 
     return cipher;
 }
+
+unsigned ofb(unsigned key[], unsigned init_vector, int debug_mode) {
+	unsigned enc_key;
+	
+    enc_key = key[0] ^ init_vector;
+
+    for (int i = 1; i < KEYCOUNT; i++) {
+        enc_key = encryption(key[i], enc_key, 1, debug_mode);
+    }
+	
+	return enc_key;
+}

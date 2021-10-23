@@ -54,6 +54,8 @@ int main(int argc, char **argv) {
 			case 'm': {
 				if (!(strcmp(optarg, "cbc")) || !(strcmp(optarg, "CBC")))
 					typeisecb = 0;
+				if (!(strcmp(optarg, "ofb")) || !(strcmp(optarg, "OFB")))
+					typeisecb = 2;
 				break;
 			};
 			case 'e': {
@@ -101,7 +103,7 @@ int main(int argc, char **argv) {
     else if (enc == 2)
     	printf("Please, enter mode (encoding or decoding)\nUse --help (or -h) to get documentation\n");
     
-    else if (!(iskey) || (typeisecb == 0 && isiv == 0))
+    else if (!(iskey) || (typeisecb != 1 && isiv == 0))
 		printf("Invalid key or init vector\nPlease, try one more time\n");
 	
 	else if ((in = fopen(filename, "r")) == NULL)
@@ -120,10 +122,12 @@ int main(int argc, char **argv) {
 	    
 	    if (debug_mode) {
 	    	printf("\n-----------------------\n");
-	    	if (typeisecb)
+	    	if (typeisecb == 1)
 	    		printf("This is AES in Electronic Codebook mode of ");
-	    	else 
+	    	else if (typeisecb == 0)
 	    		printf("This is AES in Cipher block chaining mode of ");
+	    	else if (typeisecb == 2)
+	    		printf("This is AES in Output FeedBack mode of ");
 	    	
 	    	if (enc)
 	    		printf("encoding\n");
@@ -131,7 +135,7 @@ int main(int argc, char **argv) {
 	    		printf("decoding\n");
 	    	printf("-----------------------\n");
 	    	for (int j = 0; j < KEYCOUNT; j++)
-	    		printf("Key %d value: %x\n", j, key[j]);
+	    		printf("Key %d value: %08x\n", j, key[j]);
 	    }
 
 	    while ((c = fgetc(in)) != EOF) {
@@ -145,7 +149,7 @@ int main(int argc, char **argv) {
 	            	printf("Just read this block of information:      %s\n", hex_block);
 	            }
 	            
-	            if (typeisecb) {
+	            if (typeisecb == 1) {
 	                cipher = ecb(key, inf_block, enc, debug_mode);
 	                
 	                if (debug_mode) {
@@ -159,11 +163,12 @@ int main(int argc, char **argv) {
 	    			if (!(speed_test))
 	                	printf("%08x", cipher);
 	                
-	            } else {
+	            } 
+	            else if (typeisecb == 0) {
 	                cipher = cbc(key, inf_block, init_vector, enc, debug_mode);
 	                
 	                if (debug_mode) {
-	                	printf("Use init vector: %u\n", init_vector);
+	                	printf("Use init vector: %08x\n", init_vector);
 	                	printf("This block of information after ");
 	                	if (enc)
 	    					printf("encoding: ");
@@ -179,6 +184,26 @@ int main(int argc, char **argv) {
 	                if (!(speed_test))
 	                	printf("%08x", cipher);
 	            }
+	            else if (typeisecb == 2) {
+	            	cipher = ofb(key, init_vector, debug_mode);
+	                
+	                if (debug_mode) {
+	                	printf("Use init vector: %08x\n", init_vector);
+	                	printf("This block of information after ");
+	                	if (enc)
+	    					printf("encoding: ");
+	    				else
+	    					printf("decoding: ");
+	    			}
+	    			
+	    			init_vector = cipher;
+	    			
+	    			cipher ^= inf_block;
+	                	
+	                if (!(speed_test))
+	                	printf("%08x", cipher);
+	            }
+	            
 	            i = 0;
 	            for (int j = 0; j < 8; j++)
 	                hex_block[j] = '0';
@@ -188,37 +213,63 @@ int main(int argc, char **argv) {
 	        inf_block = str_hex(hex_block);
 	        
 	        if (debug_mode) {
-	           	printf("\n-----------------------\n");
-	           	printf("\nJust read this block of information:      %s\n", hex_block);
+	            printf("\n-----------------------\n");
+	            printf("Just read this block of information:      %s\n", hex_block);
 	        }
 	            
-	        if (typeisecb) {
+	        if (typeisecb == 1) {
 	            cipher = ecb(key, inf_block, enc, debug_mode);
-	            
+	                
 	            if (debug_mode) {
-	               printf("This block of information after ");
-	               if (enc)
-	  					printf("encoding: ");
-	    		   else
-	    		   		printf("decoding: ");
+	                printf("This block of information after ");
+	                if (enc)
+	    				printf("encoding: ");
+	    			else
+	    				printf("decoding: ");
 	    		}
-	    		
+	    			
 	    		if (!(speed_test))
-	            	printf("%08x", cipher);
-	        } else {
+	                printf("%08x", cipher);
+	                
+	        } 
+	        else if (typeisecb == 0) {
 	            cipher = cbc(key, inf_block, init_vector, enc, debug_mode);
-	            
+	                
 	            if (debug_mode) {
-	               printf("Use init vector: %u\n", init_vector);
-	               printf("This block of information after ");
-	               if (enc)
-	   					printf("encoding: ");
-	    		   else
-	    			   	printf("decoding: ");
+	                printf("Use init vector: %08x\n", init_vector);
+	                printf("This block of information after ");
+	                if (enc)
+	    				printf("encoding: ");
+	    			else
+	    				printf("decoding: ");
 	    		}
-	    		
-	    		if (!(speed_test))
-	            	printf("%08x", cipher);
+	    			
+	    		if (!enc)
+	    			init_vector = inf_block;
+	    		else
+	                init_vector = cipher;
+	                	
+	            if (!(speed_test))
+	                printf("%08x", cipher);
+	        }
+	        else if (typeisecb == 2) {
+	            cipher = ofb(key, init_vector, debug_mode);
+	                
+	            if (debug_mode) {
+	                printf("Use init vector: %08x\n", init_vector);
+	                printf("This block of information after ");
+	                if (enc)
+	    				printf("encoding: ");
+	    			else
+	    				printf("decoding: ");
+	    		}
+	    			
+	    		init_vector = cipher;
+	    			
+	    		cipher ^= inf_block;
+	                	
+	            if (!(speed_test))
+	                printf("%08x", cipher);
 	        }
     	}
     	
@@ -237,10 +288,12 @@ int main(int argc, char **argv) {
 	    if (speed_test) {
 	    	double time_in_seconds = (double) (end - begin) * 1000.0 / CLOCKS_PER_SEC; 
 	    	printf("-----------------------\n");
-	    	if (typeisecb)
+	    	if (typeisecb == 1)
 	    		printf("This is AES in Electronic Codebook mode of ");
-	    	else 
+	    	else if (typeisecb == 0)
 	    		printf("This is AES in Cipher block chaining mode of ");
+	    	else if (typeisecb == 2)
+	    		printf("This is AES in Output FeedBack mode of ");
 	    	
 	    	if (enc)
 	    		printf("encoding\n");
