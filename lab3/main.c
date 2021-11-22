@@ -87,15 +87,15 @@ int main(int argc, char **argv) {
     	
         	c = str_hex(c_0);
         	
-        	out_1 = regist_1[1];
-        	taken = (char)(regist_1[ONE] ^ regist_1[THREE] ^ regist_1[FIVE] ^ 1);
+        	out_1 = regist_1[0];
+        	taken = (char)(regist_1[ONE] ^ regist_1[THREE] ^ regist_1[FIVE] ^ (char) 1);
         	reg_left(regist_1, REGISTER_1_LEN, taken);
         	
-        	out_2 = regist_2[1];
+        	out_2 = regist_2[0];
         	taken = (char)(regist_2[THREE] ^ regist_2[FIVE] ^ regist_2[SEVEN] ^ (char) 1);
         	reg_left(regist_2, REGISTER_2_LEN, taken);
         	
-        	out_3 = regist_3[1];
+        	out_3 = regist_3[0];
         	taken = (char)(regist_3[FIVE] ^ regist_3[SEVEN] ^ regist_3[NINE] ^ (char) 1);
         	reg_left(regist_3, REGISTER_3_LEN, taken);
         	
