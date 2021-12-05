@@ -15,8 +15,8 @@
 
 #define IV_LEN_3DES 21
 #define IV_LEN_AES128 16
-#define IV_LEN_AES192 24
-#define IV_LEN_AES256 32
+#define IV_LEN_AES192 16
+#define IV_LEN_AES256 16
 
 #define KEY_LEN_3DES 21
 #define KEY_LEN_AES128 16
@@ -39,16 +39,23 @@
 #define AES256 3
 
 #define PWRD_LEN 4
+#define NULL_CHECK_LEN 8
 #define BYTE_LEN 8
 #define LEN_CHAR 256
 #define MAX_TEXT_LEN 4096
+#define MAX_IV_LEN 21
 #define NONCE_LEN 64
 #define PADS_LEN 65
+#define FILENAME_LEN 30
 
 #define HMAC_MD5_LEN 16
 #define HMAC_SHA1_LEN 20
 
-void checker(FILE *in);
+int checker(FILE *in);
+
+void readinfo(FILE *in, int *hash_type, int *ci_type, char *nonce, char *iv, char *ciphertext, int *ct_len);
+
+void print_data(int hash_type, int ci_type, char *nonce, char *iv, char *ciphertext, int ct_len);
 
 unsigned str_hex(const char *str);
 
@@ -63,6 +70,14 @@ void des3_cbc_encrypt(unsigned char *in, size_t in_len,
                       unsigned char *out);
 
 void aes_cbc_encrypt(unsigned char *in, size_t in_len,
+                    unsigned char *iv, unsigned char *key,
+                    unsigned char *out, unsigned iv_len);
+
+void des3_cbc_decrypt(unsigned char *in, size_t in_len,
+                      unsigned char *iv, unsigned char *key,
+                      unsigned char *out);
+
+void aes_cbc_decrypt(unsigned char *in, size_t in_len,
                     unsigned char *iv, unsigned char *key,
                     unsigned char *out, unsigned iv_len);
 

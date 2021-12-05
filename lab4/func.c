@@ -1,6 +1,6 @@
 #include "func.h"
 
-void checker(FILE *in) {
+int checker(FILE *in) {
   char letter;
   int i;
   int flag = 0;
@@ -57,9 +57,9 @@ void checker(FILE *in) {
   }
 
   if ((i > max_len[cipher_type]) || (i < min_len[cipher_type])) {
-    printf("False\n");
+    return 0;
   } else {
-    printf("True\n");
+    return 1;
   }
 
 }
@@ -132,6 +132,27 @@ void aes_cbc_encrypt(unsigned char *in, size_t in_len, unsigned char *iv, unsign
   AES_KEY akey;
 	AES_set_encrypt_key(key, iv_len, &akey);
 	AES_cbc_encrypt(in, out, in_len, &akey, iv, AES_ENCRYPT);
+}
+
+void des3_cbc_decrypt(unsigned char *in, size_t in_len, unsigned char *iv, unsigned char *key, unsigned char *out) {
+  DES_cblock key1, key2, key3;
+	DES_key_schedule ks1, ks2, ks3;
+
+	memcpy(key1, key, 8);
+	memcpy(key2, key + 8, 8);
+	memcpy(key3, key + 16, 8);
+
+	DES_set_key((DES_cblock *) key1, &ks1);
+	DES_set_key((DES_cblock *) key2, &ks2);
+	DES_set_key((DES_cblock *) key3, &ks3);
+
+	DES_ede3_cbc_encrypt(in, out, in_len, &ks1, &ks2, &ks3, (DES_cblock *) iv, DES_DECRYPT);
+}
+
+void aes_cbc_decrypt(unsigned char *in, size_t in_len, unsigned char *iv, unsigned char *key, unsigned char *out, unsigned iv_len) {
+  AES_KEY akey;
+	AES_set_encrypt_key(key, iv_len, &akey);
+	AES_cbc_encrypt(in, out, in_len, &akey, iv, AES_DECRYPT);
 }
 
 void hmac_md5(unsigned char *text, size_t text_len, unsigned char *key, size_t key_len, unsigned char *md) {
@@ -223,4 +244,90 @@ void file_filling(char *filename, char *hash_type, int ci_type, char *nonce, cha
   }
 
   fclose(output);
+}
+
+void readinfo(FILE *in, int *hash_type, int *ci_type, char *nonce, char *iv, char *ciphertext, int *ct_len) {
+
+  int IV_LEN[NUM_TYPES_CIPHERS] = {IV_LEN_3DES, IV_LEN_AES128, IV_LEN_AES192, IV_LEN_AES256};
+
+  char letter;
+  int i = 0;
+
+  letter = fgetc(in);
+  i++;
+  letter = fgetc(in);
+  i++;
+  letter = fgetc(in);
+  i++;
+
+  letter = fgetc(in);
+  i++;
+  *hash_type = letter;
+
+  letter = fgetc(in);
+  i++;
+  *ci_type = letter;
+
+  letter = fgetc(in);
+
+  for(; letter != EOF; i++) {
+    if (i < NONCE_LEN + 4)
+      nonce[i - 5] = letter;
+
+    if ((i > NONCE_LEN + 3) && (i < NONCE_LEN + 4 + IV_LEN[*ci_type]))
+      iv[i - NONCE_LEN - 5] = letter;
+
+    if (i > NONCE_LEN + 4 + IV_LEN[*ci_type]) {
+      ciphertext[i - NONCE_LEN - 4 - IV_LEN[*ci_type]] = letter;
+      (*ct_len)++;
+    }
+
+    letter = fgetc(in);
+  }
+
+  ciphertext[i] = '\0';
+}
+
+void print_data(int hash_type, int ci_type, char *nonce, char *iv, char *ciphertext, int ct_len) {
+
+  int IV_LEN[NUM_TYPES_CIPHERS] = {IV_LEN_3DES, IV_LEN_AES128, IV_LEN_AES192, IV_LEN_AES256};
+
+  printf("HMAC_");
+  if (hash_type == 0)
+    printf("MD5, ");
+  else
+    printf("SHA1, ");
+
+  switch (ci_type) {
+    case 0:
+      printf("3DES\n");
+      break;
+    case 1:
+      printf("AES128\n");
+      break;
+    case 2:
+      printf("AES192\n");
+      break;
+    case 3:
+      printf("AES256\n");
+      break;
+  }
+
+  printf("NONCE: ");
+  for (int i = 0; i < NONCE_LEN; i++)
+    printf("%02hhx", nonce[i]);
+
+  printf("\n");
+
+  printf("IV: ");
+  for (int i = 0; i < IV_LEN[ci_type]; i++)
+      printf("%02hhx", iv[i]);
+
+  printf("\n");
+
+  printf("CT: ");
+  for (int i = 0; i < ct_len; i++)
+        printf("%02hhx", ciphertext[i]);
+
+  printf("\n");
 }

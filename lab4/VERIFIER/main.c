@@ -3,6 +3,7 @@
 int main (int argc, char *argv[]) {
     if (argc != 2) {
       printf("Please, enter only filename.\n");
+      return 0;
     }
 
     FILE *in;
@@ -19,10 +20,15 @@ int main (int argc, char *argv[]) {
       return 0;
 
     } else {
-
-      checker(in);
+      int pass = 0;
+      pass = checker(in);
+      if (pass) {
+        printf("True\n");
+      } else {
+        printf("False\n");
+      }
       fclose(in);
       return 0;
-      
+
     }
 }
