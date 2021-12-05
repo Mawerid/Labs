@@ -64,7 +64,7 @@ int main (int argc, char *argv[]) {
   char iv[MAX_IV_LEN];
   char ciphertext[MAX_TEXT_LEN];
   int ct_len = 0;
-  unsigned long int_pwrd = 0;
+  unsigned int_pwrd;
 
   in = fopen(filename, "r");
 
@@ -81,36 +81,41 @@ int main (int argc, char *argv[]) {
   char opentext[ct_len];
   int isright = 0;
 
+  char *tmp_key;
+  tmp_key = (char *) malloc(KEY_LEN[ci_type] * sizeof(char));
+
   double time_in_seconds = 0;
 
   clock_t start = clock();
   clock_t current = clock();
   clock_t previous = clock();
 
-  printf("Current: 00000000 - 0000ffff\n");
+  printf("Current: 00000000 - 00ffffff\n");
 
-  for (unsigned long i = 0; i < UINT_MAX; i++) {
+  for (unsigned i = 0; i == 0; i++) {
     int_pwrd = i;
+    isright = 1;
 
     for (int j = 0; j < PWRD_LEN; j++) {
-      password[PWRD_LEN - 1 - j] = int_pwrd % LEN_CHAR;
+      password[PWRD_LEN - 1 - j] = (char) int_pwrd % LEN_CHAR;
       int_pwrd /= LEN_CHAR;
     }
 
-    if ((!(i & 0xfffff)) && (verbose) && (i != 0)) {
+
+    if ((!(i & 0xffffff)) && (verbose) && (i != 0)) {
       previous = current;
       current = clock();
 
-      printf("Current: %08lx - %08lx |", i, (i + 0xfffff));
+      printf("Current: %08x - %08x |", i, (i + 0xffffff));
 
       time_in_seconds = (double) (current - previous) * 1000.0 / CLOCKS_PER_SEC;
-      printf("Current speed: %6.0f c/s | ", (0x100000 / time_in_seconds));
+      printf("Current speed: %6.0f c/s | ", (0x1000000 / time_in_seconds));
 
       time_in_seconds = (double) (current - start) * 1000.0 / CLOCKS_PER_SEC;
       printf("Average speed: %6.0f c/s\n", (i / time_in_seconds));
     }
 
-    
+
 
     if (hash_type) {
 
@@ -119,15 +124,11 @@ int main (int argc, char *argv[]) {
       if (strlen(key) < KEY_LEN[ci_type]) {
 
         int delta = KEY_LEN[ci_type] - strlen(key);
-        char *tmp_key;
-        tmp_key = (char *) malloc(KEY_LEN[ci_type] * sizeof(char));
         tmp_key = strcpy(tmp_key, key);
         hmac_sha1((unsigned char *) key, strlen(key), (unsigned char *) password, PWRD_LEN, (unsigned char *) tmp_key);
 
         for (int i = 0; i < delta; i++)
           key[KEY_LEN[ci_type] - delta + i] = tmp_key[i];
-
-        free(tmp_key);
 
       }
     } else {
@@ -137,18 +138,22 @@ int main (int argc, char *argv[]) {
       if (strlen(key) < KEY_LEN[ci_type]) {
 
         int delta = KEY_LEN[ci_type] - strlen(key);
-        char *tmp_key;
-        tmp_key = (char *) malloc(KEY_LEN[ci_type] * sizeof(char));
         tmp_key = strcpy(tmp_key, key);
         hmac_md5((unsigned char *) key, strlen(key), (unsigned char *) password, PWRD_LEN, (unsigned char *) tmp_key);
 
         for (int i = 0; i < delta; i++)
           key[KEY_LEN[ci_type] - delta + i] = tmp_key[i];
 
-        free(tmp_key);
-
       }
     }
+
+    for (int i = 0; i < KEY_LEN[ci_type]; i++) {
+      printf("%02hhx", key[i]);
+    }
+
+    printf("\n");
+
+
 
     if (ci_type == 0) {
       des3_cbc_decrypt((unsigned char *) ciphertext, ct_len, (unsigned char *)iv, (unsigned char *)key, (unsigned char *)opentext);
@@ -156,12 +161,25 @@ int main (int argc, char *argv[]) {
       aes_cbc_decrypt((unsigned char *) ciphertext, ct_len, (unsigned char *)iv, (unsigned char *)key, (unsigned char *)opentext, IV_LEN[ci_type] * BYTE_LEN);
     }
 
+
+    for (int i = 0; i < ct_len; i++) {
+      printf("%02hhx", opentext[i]);
+    }
+
+    printf("\n");
+
+
+
     for (int j = 0; j < NULL_CHECK_LEN; j++) {
-      if (opentext[i] != 0){
+      if (opentext[j] != 0){
         isright = 0;
         break;
       }
     }
+
+    if (i == UINT_MAX)
+      break;
+
 
     if (isright)
       break;
@@ -169,6 +187,8 @@ int main (int argc, char *argv[]) {
   }
 
   current = clock();
+
+  free(tmp_key);
 
   printf("Found: ");
   for (int i = 0; i < PWRD_LEN; i++) {
@@ -179,6 +199,7 @@ int main (int argc, char *argv[]) {
     time_in_seconds = (double) (current - start) * 1000.0 / CLOCKS_PER_SEC;
     printf(" | Average speed: %6.0f c/s\n", (0xffffffff / time_in_seconds));
   }
+
 
   printf("\nMessage's text is: \n\n");
   for (int i = (NULL_CHECK_LEN + 1); i < ct_len; i++) {
