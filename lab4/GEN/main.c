@@ -114,12 +114,12 @@ int main (int argc, char *argv[]) {
     }
 
     if (ci_type == 0) {
-      des3_cbc_encrypt((unsigned char *) opentext, (strlen(text) + 8), (unsigned char *)iv, (unsigned char *)key, (unsigned char *)ciphertext);
+      des3_cbc_encrypt((unsigned char *) opentext, (strlen(text) + NULL_CHECK_LEN), (unsigned char *)iv, (unsigned char *)key, (unsigned char *)ciphertext);
     } else {
-      aes_cbc_encrypt((unsigned char *) opentext, (strlen(text) + 8), (unsigned char *)iv, (unsigned char *)key, (unsigned char *)ciphertext, IV_LEN[ci_type] * BYTE_LEN);
+      aes_cbc_encrypt((unsigned char *) opentext, (strlen(text) + NULL_CHECK_LEN), (unsigned char *)iv, (unsigned char *)key, (unsigned char *)ciphertext, IV_LEN[ci_type] * BYTE_LEN);
     }
 
-    file_filling(filename, hash_type, ci_type, nonce, iv, ciphertext, IV_LEN[ci_type], (strlen(text) + 8));
+    file_filling(filename, hash_type, ci_type, nonce, iv, ciphertext, IV_LEN[ci_type], (strlen(text) + NULL_CHECK_LEN));
 
     free(ciphertext);
     free(opentext);

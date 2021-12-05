@@ -92,7 +92,7 @@ int main (int argc, char *argv[]) {
 
   printf("Current: 00000000 - 00ffffff\n");
 
-  for (unsigned i = 0; i == 0; i++) {
+  for (unsigned i = 0; i <= UINT_MAX; i++) {
     int_pwrd = i;
     isright = 1;
 
@@ -169,13 +169,6 @@ int main (int argc, char *argv[]) {
     } else {
       aes_cbc_decrypt((unsigned char *) ciphertext, ct_len, (unsigned char *)iv, (unsigned char *)key, (unsigned char *)opentext, IV_LEN[ci_type] * BYTE_LEN);
     }
-
-
-    for (int i = 0; i < ct_len; i++) {
-      printf("%02hhx", opentext[i]);
-    }
-
-    printf("\n");
 
 
     for (int j = 0; j < NULL_CHECK_LEN; j++) {
