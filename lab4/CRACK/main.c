@@ -117,41 +117,50 @@ int main (int argc, char *argv[]) {
 
 
 
-    if (hash_type) {
+    if (hash_type == 0) {
 
-      hmac_sha1((unsigned char *) nonce, NONCE_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) key);
+      char hmac[HMAC_MD5_LEN];
 
-      if (strlen(key) < KEY_LEN[ci_type]) {
+      hmac_md5((unsigned char *) nonce, NONCE_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) hmac);
 
-        int delta = KEY_LEN[ci_type] - strlen(key);
-        tmp_key = strcpy(tmp_key, key);
-        hmac_sha1((unsigned char *) key, strlen(key), (unsigned char *) password, PWRD_LEN, (unsigned char *) tmp_key);
+      for(int i = 0; i < HMAC_MD5_LEN; i++)
+        key[i] = hmac[i];
+
+      if (HMAC_MD5_LEN < KEY_LEN[ci_type]) {
+
+        int delta = KEY_LEN[ci_type] - HMAC_MD5_LEN;
+        char tmp_hmac[HMAC_MD5_LEN];
+        hmac_md5((unsigned char *) hmac, HMAC_MD5_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) tmp_hmac);
 
         for (int i = 0; i < delta; i++)
-          key[KEY_LEN[ci_type] - delta + i] = tmp_key[i];
+          key[KEY_LEN[ci_type] - delta + i] = tmp_hmac[i];
 
       }
     } else {
 
-      hmac_md5((unsigned char *) nonce, NONCE_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) key);
+      char hmac[HMAC_SHA1_LEN];
 
-      if (strlen(key) < KEY_LEN[ci_type]) {
+      hmac_sha1((unsigned char *) nonce, NONCE_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) hmac);
 
-        int delta = KEY_LEN[ci_type] - strlen(key);
-        tmp_key = strcpy(tmp_key, key);
-        hmac_md5((unsigned char *) key, strlen(key), (unsigned char *) password, PWRD_LEN, (unsigned char *) tmp_key);
+      if (HMAC_SHA1_LEN > KEY_LEN[ci_type]) {
+
+        for(int i = 0; i < KEY_LEN[ci_type]; i++)
+          key[i] = hmac[i];
+
+      } else if (HMAC_SHA1_LEN < KEY_LEN[ci_type]) {
+
+        for(int i = 0; i < HMAC_SHA1_LEN; i++)
+          key[i] = hmac[i];
+
+        int delta = KEY_LEN[ci_type] - HMAC_SHA1_LEN;
+        char tmp_hmac[HMAC_SHA1_LEN];
+        hmac_md5((unsigned char *) hmac, HMAC_SHA1_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) tmp_hmac);
 
         for (int i = 0; i < delta; i++)
-          key[KEY_LEN[ci_type] - delta + i] = tmp_key[i];
+          key[KEY_LEN[ci_type] - delta + i] = tmp_hmac[i];
 
       }
     }
-
-    for (int i = 0; i < KEY_LEN[ci_type]; i++) {
-      printf("%02hhx", key[i]);
-    }
-
-    printf("\n");
 
 
 
@@ -169,7 +178,6 @@ int main (int argc, char *argv[]) {
     printf("\n");
 
 
-
     for (int j = 0; j < NULL_CHECK_LEN; j++) {
       if (opentext[j] != 0){
         isright = 0;
@@ -179,7 +187,6 @@ int main (int argc, char *argv[]) {
 
     if (i == UINT_MAX)
       break;
-
 
     if (isright)
       break;
@@ -202,7 +209,7 @@ int main (int argc, char *argv[]) {
 
 
   printf("\nMessage's text is: \n\n");
-  for (int i = (NULL_CHECK_LEN + 1); i < ct_len; i++) {
+  for (int i = NULL_CHECK_LEN; i < ct_len; i++) {
     printf("%c", opentext[i]);
   }
 
