@@ -114,7 +114,7 @@ int main (int argc, char *argv[]) {
 
     }
 
-    
+
 
 
 
@@ -170,6 +170,19 @@ int main (int argc, char *argv[]) {
     } else {
       aes_cbc_decrypt((unsigned char *) ciphertext, ct_len, (unsigned char *)iv, (unsigned char *)key, (unsigned char *)opentext, KEY_LEN[ci_type] * BYTE_LEN);
     }
+
+
+    printf("\nMessage's text is: \n\n");
+    for (int j = NULL_CHECK_LEN; j < ct_len; j++) {
+      printf("%c", opentext[j]);
+    }
+
+    printf("\n\n");
+    for (int j = NULL_CHECK_LEN; j < ct_len; j++) {
+      printf("%02hhx", opentext[j]);
+    }
+
+    printf("\n\n");
 
 
     for (int j = 0; j < NULL_CHECK_LEN; j++) {
