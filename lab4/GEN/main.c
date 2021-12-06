@@ -6,11 +6,11 @@ int main (int argc, char *argv[]) {
 
 
     unsigned int_password = str_hex(argv[1]);
-    char * hash_type = argv[2];
-    char * cipher_type = argv[3];
-    char * text = TEXT;
-    char * opentext;
-    char * ciphertext;
+    char *hash_type = argv[2];
+    char *cipher_type = argv[3];
+    char *text = TEXT;
+    char *opentext;
+    char *ciphertext;
     char password[PWRD_LEN];
     char filename[FILENAME_LEN];
     int ci_type = 0;
@@ -47,14 +47,19 @@ int main (int argc, char *argv[]) {
 
     create_filename(hash_type, cipher_type, int_password, filename);
 
-    opentext = (char *) malloc((strlen(text) + 8) * sizeof(char));
-    ciphertext = (char*) malloc(MAX_TEXT_LEN * sizeof(char));
+    int ot_len = strlen(text) + NULL_CHECK_LEN + ((strlen(text) + NULL_CHECK_LEN) % IV_LEN[ci_type]);
 
-    for (int i = 0; i < 8; i++)
+    opentext = (char *) malloc((ot_len) * sizeof(char));
+    ciphertext = (char*) malloc((ot_len) * sizeof(char));
+
+    for (int i = 0; i < NULL_CHECK_LEN; i++)
       opentext[i] = 0;
 
     for (int i = 0; i < strlen(text); i++)
-      opentext[i + 8] = text[i];
+      opentext[i + NULL_CHECK_LEN] = text[i];
+
+    for (int i = 0; i < ((strlen(text) + NULL_CHECK_LEN) % IV_LEN[ci_type]); i++)
+      opentext[i + strlen(text) + NULL_CHECK_LEN] = ' ';
 
     for (int i = 0; i < PWRD_LEN; i++) {
       password[PWRD_LEN - 1 - i] = int_password % LEN_CHAR;
@@ -63,10 +68,21 @@ int main (int argc, char *argv[]) {
 
     char nonce[NONCE_LEN];
     char iv[IV_LEN[ci_type]];
+    char iv_cpy[IV_LEN[ci_type]];
     char key[KEY_LEN[ci_type]];
 
-    generate(nonce, NONCE_LEN);
-    generate(iv, IV_LEN[ci_type]);
+    // srand(time(NULL));
+    //
+    // generate(nonce, NONCE_LEN);
+    // generate(iv, IV_LEN[ci_type]);
+
+    memset(nonce, 0, NONCE_LEN);
+    memset(iv, 0, IV_LEN[ci_type]);
+
+    for (int i = 0; i < IV_LEN[ci_type]; i++)
+      iv_cpy[i] = iv[i];
+
+
 
     if (strcmp(hash_type, "md5") == 0) {
 
@@ -93,7 +109,7 @@ int main (int argc, char *argv[]) {
 
       hmac_sha1((unsigned char *) nonce, NONCE_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) hmac);
 
-      if (HMAC_SHA1_LEN > KEY_LEN[ci_type]) {
+      if (HMAC_SHA1_LEN >= KEY_LEN[ci_type]) {
 
         for(int i = 0; i < KEY_LEN[ci_type]; i++)
           key[i] = hmac[i];
@@ -114,12 +130,16 @@ int main (int argc, char *argv[]) {
     }
 
     if (ci_type == 0) {
-      des3_cbc_encrypt((unsigned char *) opentext, (strlen(text) + NULL_CHECK_LEN), (unsigned char *)iv, (unsigned char *)key, (unsigned char *)ciphertext);
+
+      des3_cbc_encrypt((unsigned char *) opentext, ot_len, (unsigned char *)iv, (unsigned char *)key, (unsigned char *)ciphertext);
+
     } else {
-      aes_cbc_encrypt((unsigned char *) opentext, (strlen(text) + NULL_CHECK_LEN), (unsigned char *)iv, (unsigned char *)key, (unsigned char *)ciphertext, IV_LEN[ci_type] * BYTE_LEN);
+
+      aes_cbc_encrypt((unsigned char *) opentext, ot_len, (unsigned char *)iv, (unsigned char *)key, (unsigned char *)ciphertext, KEY_LEN[ci_type] * BYTE_LEN);
+
     }
 
-    file_filling(filename, hash_type, ci_type, nonce, iv, ciphertext, IV_LEN[ci_type], (strlen(text) + NULL_CHECK_LEN));
+    file_filling(filename, hash_type, ci_type, nonce, iv_cpy, ciphertext, IV_LEN[ci_type], ot_len);
 
     free(ciphertext);
     free(opentext);

@@ -71,7 +71,7 @@ void des3_cbc_encrypt(unsigned char *in, size_t in_len,
 
 void aes_cbc_encrypt(unsigned char *in, size_t in_len,
                     unsigned char *iv, unsigned char *key,
-                    unsigned char *out, unsigned iv_len);
+                    unsigned char *out, unsigned key_len);
 
 void des3_cbc_decrypt(unsigned char *in, size_t in_len,
                       unsigned char *iv, unsigned char *key,
@@ -79,7 +79,7 @@ void des3_cbc_decrypt(unsigned char *in, size_t in_len,
 
 void aes_cbc_decrypt(unsigned char *in, size_t in_len,
                     unsigned char *iv, unsigned char *key,
-                    unsigned char *out, unsigned iv_len);
+                    unsigned char *out, unsigned key_len);
 
 void hmac_md5(unsigned char *text, size_t text_len, unsigned char *key, size_t key_len, unsigned char *md);
 

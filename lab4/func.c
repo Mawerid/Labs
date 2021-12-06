@@ -92,9 +92,8 @@ unsigned str_hex(const char *str){
     return num;
 }
 
-void generate(char * string, int len) {
-  srand(time(NULL));
-  for (int i = 0; i < len-1; i++) {
+void generate(char *string, int len) {
+  for (int i = 0; i < len; i++) {
     string[i] = (unsigned char) (rand() % LEN_CHAR);
   }
 }
@@ -128,9 +127,9 @@ void des3_cbc_encrypt(unsigned char *in, size_t in_len, unsigned char *iv, unsig
 	DES_ede3_cbc_encrypt(in, out, in_len, &ks1, &ks2, &ks3, (DES_cblock *) iv, DES_ENCRYPT);
 }
 
-void aes_cbc_encrypt(unsigned char *in, size_t in_len, unsigned char *iv, unsigned char *key, unsigned char *out, unsigned iv_len) {
+void aes_cbc_encrypt(unsigned char *in, size_t in_len, unsigned char *iv, unsigned char *key, unsigned char *out, unsigned key_len) {
   AES_KEY akey;
-	AES_set_encrypt_key(key, iv_len, &akey);
+	AES_set_encrypt_key(key, key_len, &akey);
 	AES_cbc_encrypt(in, out, in_len, &akey, iv, AES_ENCRYPT);
 }
 
@@ -149,9 +148,9 @@ void des3_cbc_decrypt(unsigned char *in, size_t in_len, unsigned char *iv, unsig
 	DES_ede3_cbc_encrypt(in, out, in_len, &ks1, &ks2, &ks3, (DES_cblock *) iv, DES_DECRYPT);
 }
 
-void aes_cbc_decrypt(unsigned char *in, size_t in_len, unsigned char *iv, unsigned char *key, unsigned char *out, unsigned iv_len) {
+void aes_cbc_decrypt(unsigned char *in, size_t in_len, unsigned char *iv, unsigned char *key, unsigned char *out, unsigned key_len) {
   AES_KEY akey;
-	AES_set_encrypt_key(key, iv_len, &akey);
+	AES_set_decrypt_key(key, key_len, &akey);
 	AES_cbc_encrypt(in, out, in_len, &akey, iv, AES_DECRYPT);
 }
 
@@ -175,7 +174,7 @@ void hmac_md5(unsigned char *text, size_t text_len, unsigned char *key, size_t k
 
   MD5_Init(&context);
   MD5_Update(&context, opad, (PADS_LEN-1));
-  MD5_Update(&context, text, HMAC_MD5_LEN);
+  MD5_Update(&context, md, HMAC_MD5_LEN);
   MD5_Final(md, &context);
 }
 
@@ -199,7 +198,7 @@ void hmac_sha1(unsigned char *text, size_t text_len, unsigned char *key, size_t 
 
   SHA1_Init(&context);
   SHA1_Update(&context, opad, (PADS_LEN-1));
-  SHA1_Update(&context, text, HMAC_SHA1_LEN);
+  SHA1_Update(&context, md, HMAC_SHA1_LEN);
   SHA1_Final(md, &context);
 }
 
@@ -271,21 +270,20 @@ void readinfo(FILE *in, int *hash_type, int *ci_type, char *nonce, char *iv, cha
   letter = fgetc(in);
 
   for(; letter != EOF; i++) {
-    if (i < NONCE_LEN + 4)
+    if (i < NONCE_LEN + 5)
       nonce[i - 5] = letter;
 
-    if ((i > NONCE_LEN + 3) && (i < NONCE_LEN + 4 + IV_LEN[*ci_type]))
+    if ((i > NONCE_LEN + 4) && (i < NONCE_LEN + 5 + IV_LEN[*ci_type]))
       iv[i - NONCE_LEN - 5] = letter;
 
     if (i > NONCE_LEN + 4 + IV_LEN[*ci_type]) {
-      ciphertext[i - NONCE_LEN - 4 - IV_LEN[*ci_type]] = letter;
+      ciphertext[i - NONCE_LEN - 5 - IV_LEN[*ci_type]] = letter;
       (*ct_len)++;
     }
 
     letter = fgetc(in);
   }
 
-  ciphertext[i] = '\0';
 }
 
 void print_data(int hash_type, int ci_type, char *nonce, char *iv, char *ciphertext, int ct_len) {
