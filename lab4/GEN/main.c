@@ -58,9 +58,6 @@ int main (int argc, char *argv[]) {
     for (int i = 0; i < strlen(text); i++)
       opentext[i + NULL_CHECK_LEN] = text[i];
 
-    // for (int i = 0; i < ((strlen(text) + NULL_CHECK_LEN) % IV_LEN[ci_type]); i++)
-    //   opentext[i + strlen(text) + NULL_CHECK_LEN] = 0;
-
     for (int i = 0; i < PWRD_LEN; i++) {
       password[PWRD_LEN - 1 - i] = int_password % LEN_CHAR;
       int_password /= LEN_CHAR;
@@ -71,13 +68,13 @@ int main (int argc, char *argv[]) {
     unsigned char iv_cpy[IV_LEN[ci_type]];
     unsigned char key[KEY_LEN[ci_type]];
 
-    // srand(time(NULL));
-    //
-    // generate(nonce, NONCE_LEN);
-    // generate(iv, IV_LEN[ci_type]);
+    srand(time(NULL));
 
-    memset(nonce, 0, NONCE_LEN);
-    memset(iv, 0, IV_LEN[ci_type]);
+    generate(nonce, NONCE_LEN);
+    generate(iv, IV_LEN[ci_type]);
+
+    // memset(nonce, 0, NONCE_LEN);
+    // memset(iv, 0, IV_LEN[ci_type]);
 
     for (int i = 0; i < IV_LEN[ci_type]; i++)
       iv_cpy[i] = iv[i];
@@ -129,13 +126,13 @@ int main (int argc, char *argv[]) {
       }
     }
 
-    printf("\nOT: ");
-
-    for (int j = 0; j < ot_len; j++) {
-      printf("%02hhx", opentext[j]);
-    }
-
-    printf("\n\n");
+    // printf("\nOT: ");
+    //
+    // for (int j = 0; j < ot_len; j++) {
+    //   printf("%02hhx", opentext[j]);
+    // }
+    //
+    // printf("\n\n");
 
     if (ci_type == 0) {
 
@@ -147,13 +144,13 @@ int main (int argc, char *argv[]) {
 
     }
 
-    printf("\nOT: ");
-
-    for (int j = 0; j < ot_len; j++) {
-      printf("%02hhx", ciphertext[j]);
-    }
-
-    printf("\n\n");
+    // printf("\nСT: ");
+    //
+    // for (int j = 0; j < ot_len; j++) {
+    //   printf("%02hhx", ciphertext[j]);
+    // }
+    //
+    // printf("\n\n");
 
     file_filling(filename, hash_type, ci_type, nonce, iv_cpy, ciphertext, IV_LEN[ci_type], ot_len);
 

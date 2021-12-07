@@ -16,9 +16,7 @@ int checker(FILE *in) {
     MINLEN_AES256};
   int cipher_type;
 
-  letter = fgetc(in);
-
-  for(i = 0; letter != EOF; i++) {
+  for(i = 0; fread(&letter, sizeof(char), 1, in) == 1; i++) {
 
     switch (i) {
       case 0:
@@ -53,7 +51,6 @@ int checker(FILE *in) {
     if (flag) {
       break;
     }
-    letter = fgetc(in);
   }
 
   if ((i > max_len[cipher_type]) || (i < min_len[cipher_type])) {
@@ -93,9 +90,9 @@ unsigned str_hex(const char *str){
 }
 
 void generate(unsigned char *string, int len) {
-  for (int i = 0; i < len; i++) {
+  for (int i = 0; i < len; i++)
     string[i] = (unsigned char) (rand() % LEN_CHAR);
-  }
+
 }
 
 void md5(unsigned char *data, size_t data_len, unsigned char *hash) {
@@ -162,7 +159,7 @@ void hmac_md5(unsigned char *text, size_t text_len, unsigned char *key, size_t k
   memset(ipad, 0x36, PADS_LEN);
   memset(opad, 0x5c, PADS_LEN);
 
-  for (int i = 0; i < key_len; i++) {
+  for (unsigned i = 0; i < key_len; i++) {
     ipad[i] ^= key[i];
     opad[i] ^= key[i];
   }
@@ -186,7 +183,7 @@ void hmac_sha1(unsigned char *text, size_t text_len, unsigned char *key, size_t 
   memset(ipad, 0x36, PADS_LEN);
   memset(opad, 0x5c, PADS_LEN);
 
-  for (int i = 0; i < key_len; i++) {
+  for (unsigned i = 0; i < key_len; i++) {
     ipad[i] ^= key[i];
     opad[i] ^= key[i];
   }
@@ -263,10 +260,8 @@ void readinfo(FILE *in, int *hash_type, int *ci_type, unsigned char *nonce, unsi
 
   fread(iv, sizeof(unsigned char), IV_LEN[*ci_type], in);
 
-  for((*ct_len) = 0; fread(&letter, sizeof(char), 1, in) == 1; (*ct_len)++) {
-    printf("%02hhx -- ", letter);
+  for((*ct_len) = 0; fread(&letter, sizeof(char), 1, in) == 1; (*ct_len)++)
     ciphertext[(*ct_len)] = (unsigned char) letter;
-  }
 
 }
 

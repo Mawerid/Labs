@@ -90,7 +90,7 @@ int main (int argc, char *argv[]) {
 
   printf("Current: 00000000 - 000fffff\n");
 
-  for (; i <= 0xa/*UINT_MAX*/; i++) {
+  for (; i <= /* 0xa */UINT_MAX; i++) {
     int_pwrd = i;
     isright = 1;
 
@@ -172,17 +172,17 @@ int main (int argc, char *argv[]) {
     }
 
 
-    printf("\nMessage's text is: \n\n");
-    for (int j = NULL_CHECK_LEN; j < ct_len; j++) {
-      printf("%c", opentext[j]);
-    }
-
-    printf("\n\n");
-    for (int j = 0; j < ct_len; j++) {
-      printf("%02hhx", opentext[j]);
-    }
-
-    printf("\n\n");
+    // printf("\nMessage's text is: \n\n");
+    // for (int j = NULL_CHECK_LEN; j < ct_len; j++) {
+    //   printf("%c", opentext[j]);
+    // }
+    //
+    // printf("\n\n");
+    // for (int j = 0; j < ct_len; j++) {
+    //   printf("%02hhx", opentext[j]);
+    // }
+    //
+    // printf("\n\n");
 
 
     for (int j = 0; j < NULL_CHECK_LEN; j++) {
