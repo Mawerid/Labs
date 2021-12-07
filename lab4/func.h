@@ -13,7 +13,7 @@
 
 #define NUM_TYPES_CIPHERS 4
 
-#define IV_LEN_3DES 21
+#define IV_LEN_3DES 8
 #define IV_LEN_AES128 16
 #define IV_LEN_AES192 16
 #define IV_LEN_AES256 16
@@ -53,13 +53,13 @@
 
 int checker(FILE *in);
 
-void readinfo(FILE *in, int *hash_type, int *ci_type, char *nonce, char *iv, char *ciphertext, int *ct_len);
+void readinfo(FILE *in, int *hash_type, int *ci_type, unsigned char *nonce, unsigned char *iv, unsigned char *ciphertext, int *ct_len);
 
-void print_data(int hash_type, int ci_type, char *nonce, char *iv, char *ciphertext, int ct_len);
+void print_data(int hash_type, int ci_type, unsigned char *nonce, unsigned char *iv, unsigned char *ciphertext, int ct_len);
 
 unsigned str_hex(const char *str);
 
-void generate(char *string, int len);
+void generate(unsigned char *string, int len);
 
 void md5(unsigned char *data, size_t data_len, unsigned char *hash);
 
@@ -87,4 +87,4 @@ void hmac_sha1(unsigned char *text, size_t text_len, unsigned char *key, size_t 
 
 void create_filename(char *hash_type, char *cipher_type, unsigned password, char *filename);
 
-void file_filling(char *filename, char *hash_type, int ci_type, char *nonce, char *iv, char *text, int iv_len, int text_len);
+void file_filling(char *filename, char *hash_type, int ci_type, unsigned char *nonce, unsigned char *iv, unsigned char *text, int iv_len, int text_len);

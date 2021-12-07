@@ -39,7 +39,7 @@ int main (int argc, char *argv[]) {
   FILE *in;
   int pass = 0;
 
-  if ((in = fopen(filename, "r")) == NULL) {
+  if ((in = fopen(filename, "rb")) == NULL) {
 		printf("Please, enter correct filename\n");
     return 0;
   }
@@ -60,13 +60,13 @@ int main (int argc, char *argv[]) {
   int KEY_LEN[NUM_TYPES_CIPHERS] = {KEY_LEN_3DES, KEY_LEN_AES128, KEY_LEN_AES192, KEY_LEN_AES256};
 
 
-  char nonce[NONCE_LEN];
-  char iv[MAX_IV_LEN];
-  char ciphertext[MAX_TEXT_LEN];
+  unsigned char nonce[NONCE_LEN];
+  unsigned char iv[MAX_IV_LEN];
+  unsigned char ciphertext[MAX_TEXT_LEN];
   int ct_len = 0;
   unsigned int_pwrd;
 
-  in = fopen(filename, "r");
+  in = fopen(filename, "rb");
 
   readinfo(in, &hash_type, &ci_type, nonce, iv, ciphertext, &ct_len);
 
@@ -76,9 +76,9 @@ int main (int argc, char *argv[]) {
 
   printf("\nStart cracking\n\n\n");
 
-  char password[PWRD_LEN];
-  char key[KEY_LEN[ci_type]];
-  char opentext[ct_len];
+  unsigned char password[PWRD_LEN];
+  unsigned char key[KEY_LEN[ci_type]];
+  unsigned char opentext[ct_len];
   int isright = 0;
   unsigned i = 0;
 
@@ -95,7 +95,7 @@ int main (int argc, char *argv[]) {
     isright = 1;
 
     for (int j = 0; j < PWRD_LEN; j++) {
-      password[PWRD_LEN - 1 - j] = (char) int_pwrd % LEN_CHAR;
+      password[PWRD_LEN - 1 - j] = (unsigned char) int_pwrd % LEN_CHAR;
       int_pwrd /= LEN_CHAR;
     }
 
@@ -120,9 +120,9 @@ int main (int argc, char *argv[]) {
 
     if (hash_type == 0) {
 
-      char hmac[HMAC_MD5_LEN];
+      unsigned char hmac[HMAC_MD5_LEN];
 
-      hmac_md5((unsigned char *) nonce, NONCE_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) hmac);
+      hmac_md5(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
 
       for(int j = 0; j < HMAC_MD5_LEN; j++)
         key[j] = hmac[j];
@@ -131,8 +131,8 @@ int main (int argc, char *argv[]) {
       if (HMAC_MD5_LEN < KEY_LEN[ci_type]) {
 
         int delta = KEY_LEN[ci_type] - HMAC_MD5_LEN;
-        char tmp_hmac[HMAC_MD5_LEN];
-        hmac_md5((unsigned char *) hmac, HMAC_MD5_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) tmp_hmac);
+        unsigned char tmp_hmac[HMAC_MD5_LEN];
+        hmac_md5(hmac, HMAC_MD5_LEN, password, PWRD_LEN, tmp_hmac);
 
         for (int j = 0; j < delta; j++)
           key[KEY_LEN[ci_type] - delta + j] = tmp_hmac[j];
@@ -140,9 +140,9 @@ int main (int argc, char *argv[]) {
       }
     } else {
 
-      char hmac[HMAC_SHA1_LEN];
+      unsigned char hmac[HMAC_SHA1_LEN];
 
-      hmac_sha1((unsigned char *) nonce, NONCE_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) hmac);
+      hmac_sha1(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
 
       if (HMAC_SHA1_LEN >= KEY_LEN[ci_type]) {
 
@@ -155,8 +155,8 @@ int main (int argc, char *argv[]) {
           key[j] = hmac[j];
 
         int delta = KEY_LEN[ci_type] - HMAC_SHA1_LEN;
-        char tmp_hmac[HMAC_SHA1_LEN];
-        hmac_md5((unsigned char *) hmac, HMAC_SHA1_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) tmp_hmac);
+        unsigned char tmp_hmac[HMAC_SHA1_LEN];
+        hmac_md5(hmac, HMAC_SHA1_LEN, password, PWRD_LEN, tmp_hmac);
 
         for (int j = 0; j < delta; j++)
           key[KEY_LEN[ci_type] - delta + j] = tmp_hmac[j];
@@ -166,9 +166,9 @@ int main (int argc, char *argv[]) {
 
 
     if (ci_type == 0) {
-      des3_cbc_decrypt((unsigned char *) ciphertext, ct_len, (unsigned char *)iv, (unsigned char *)key, (unsigned char *)opentext);
+      des3_cbc_decrypt(ciphertext, ct_len, iv, key, opentext);
     } else {
-      aes_cbc_decrypt((unsigned char *) ciphertext, ct_len, (unsigned char *)iv, (unsigned char *)key, (unsigned char *)opentext, KEY_LEN[ci_type] * BYTE_LEN);
+      aes_cbc_decrypt(ciphertext, ct_len, iv, key, opentext, KEY_LEN[ci_type] * BYTE_LEN);
     }
 
 
@@ -178,7 +178,7 @@ int main (int argc, char *argv[]) {
     }
 
     printf("\n\n");
-    for (int j = NULL_CHECK_LEN; j < ct_len; j++) {
+    for (int j = 0; j < ct_len; j++) {
       printf("%02hhx", opentext[j]);
     }
 

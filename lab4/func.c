@@ -92,7 +92,7 @@ unsigned str_hex(const char *str){
     return num;
 }
 
-void generate(char *string, int len) {
+void generate(unsigned char *string, int len) {
   for (int i = 0; i < len; i++) {
     string[i] = (unsigned char) (rand() % LEN_CHAR);
   }
@@ -218,9 +218,9 @@ void create_filename(char *hash_type, char *cipher_type, unsigned password, char
   strcpy((filename + strlen(hash_type) + strlen(cipher_type) + 2 + PWRD_LEN*2), ".enc");
 }
 
-void file_filling(char *filename, char *hash_type, int ci_type, char *nonce, char *iv, char *text, int iv_len, int text_len) {
+void file_filling(char *filename, char *hash_type, int ci_type, unsigned char *nonce, unsigned char *iv, unsigned char *text, int iv_len, int text_len) {
   FILE * output;
-  output = fopen(filename, "w");
+  output = fopen(filename, "wb");
 
   if (strcmp(hash_type, "md5") == 0) {
     fprintf(output, "ENC%c", 0);
@@ -245,48 +245,32 @@ void file_filling(char *filename, char *hash_type, int ci_type, char *nonce, cha
   fclose(output);
 }
 
-void readinfo(FILE *in, int *hash_type, int *ci_type, char *nonce, char *iv, char *ciphertext, int *ct_len) {
+void readinfo(FILE *in, int *hash_type, int *ci_type, unsigned char *nonce, unsigned char *iv, unsigned char *ciphertext, int *ct_len) {
 
   int IV_LEN[NUM_TYPES_CIPHERS] = {IV_LEN_3DES, IV_LEN_AES128, IV_LEN_AES192, IV_LEN_AES256};
 
   char letter;
-  int i = 0;
 
-  letter = fgetc(in);
-  i++;
-  letter = fgetc(in);
-  i++;
-  letter = fgetc(in);
-  i++;
+  fread(&letter, sizeof(unsigned char), 1, in);
+  fread(&letter, sizeof(unsigned char), 1, in);
+  fread(&letter, sizeof(unsigned char), 1, in);
 
-  letter = fgetc(in);
-  i++;
-  *hash_type = letter;
+  fread(hash_type, sizeof(unsigned char), 1, in);
 
-  letter = fgetc(in);
-  i++;
-  *ci_type = letter;
+  fread(ci_type, sizeof(unsigned char), 1, in);
 
-  letter = fgetc(in);
+  fread(nonce, sizeof(unsigned char), NONCE_LEN, in);
 
-  for(; letter != EOF; i++) {
-    if (i < NONCE_LEN + 5)
-      nonce[i - 5] = letter;
+  fread(iv, sizeof(unsigned char), IV_LEN[*ci_type], in);
 
-    if ((i > NONCE_LEN + 4) && (i < NONCE_LEN + 5 + IV_LEN[*ci_type]))
-      iv[i - NONCE_LEN - 5] = letter;
-
-    if (i > NONCE_LEN + 4 + IV_LEN[*ci_type]) {
-      ciphertext[i - NONCE_LEN - 5 - IV_LEN[*ci_type]] = letter;
-      (*ct_len)++;
-    }
-
-    letter = fgetc(in);
+  for((*ct_len) = 0; fread(&letter, sizeof(char), 1, in) == 1; (*ct_len)++) {
+    printf("%02hhx -- ", letter);
+    ciphertext[(*ct_len)] = (unsigned char) letter;
   }
 
 }
 
-void print_data(int hash_type, int ci_type, char *nonce, char *iv, char *ciphertext, int ct_len) {
+void print_data(int hash_type, int ci_type, unsigned char *nonce, unsigned char *iv, unsigned char *ciphertext, int ct_len) {
 
   int IV_LEN[NUM_TYPES_CIPHERS] = {IV_LEN_3DES, IV_LEN_AES128, IV_LEN_AES192, IV_LEN_AES256};
 
