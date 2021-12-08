@@ -126,13 +126,13 @@ int main (int argc, char *argv[]) {
       }
     }
 
-    // printf("\nOT: ");
-    //
-    // for (int j = 0; j < ot_len; j++) {
-    //   printf("%02hhx", opentext[j]);
-    // }
-    //
-    // printf("\n\n");
+    printf("\nOT: ");
+
+    for (int j = 0; j < ot_len; j++) {
+      printf("%02hhx", opentext[j]);
+    }
+
+    printf("\n\n");
 
     if (ci_type == 0) {
 
@@ -144,13 +144,25 @@ int main (int argc, char *argv[]) {
 
     }
 
-    // printf("\nСT: ");
-    //
-    // for (int j = 0; j < ot_len; j++) {
-    //   printf("%02hhx", ciphertext[j]);
-    // }
-    //
-    // printf("\n\n");
+    printf("\nСT: ");
+
+    for (int j = 0; j < ot_len; j++) {
+      printf("%02hhx", ciphertext[j]);
+    }
+
+    printf("\n\n");
+
+    printf("NONCE: ");
+    for (int i = 0; i < NONCE_LEN; i++)
+      printf("%02hhx", nonce[i]);
+
+    printf("\n");
+
+    printf("IV: ");
+    for (int i = 0; i < IV_LEN[ci_type]; i++)
+        printf("%02hhx", iv_cpy[i]);
+
+    printf("\n");
 
     file_filling(filename, hash_type, ci_type, nonce, iv_cpy, ciphertext, IV_LEN[ci_type], ot_len);
 

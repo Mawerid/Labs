@@ -58,6 +58,7 @@ int main (int argc, char *argv[]) {
   int hash_type = 0;
   int ci_type = 0;
   int KEY_LEN[NUM_TYPES_CIPHERS] = {KEY_LEN_3DES, KEY_LEN_AES128, KEY_LEN_AES192, KEY_LEN_AES256};
+  int IV_LEN[NUM_TYPES_CIPHERS] = {IV_LEN_3DES, IV_LEN_AES128, IV_LEN_AES192, IV_LEN_AES256};
 
 
   unsigned char nonce[NONCE_LEN];
@@ -79,8 +80,12 @@ int main (int argc, char *argv[]) {
   unsigned char password[PWRD_LEN];
   unsigned char key[KEY_LEN[ci_type]];
   unsigned char opentext[ct_len];
+  unsigned char iv_cpy[IV_LEN[ci_type]];
   int isright = 0;
   unsigned i = 0;
+
+  for (int j = 0; j < IV_LEN[ci_type]; j++)
+    iv_cpy[j] = iv[j];
 
   double time_in_seconds = 0;
 
@@ -88,11 +93,14 @@ int main (int argc, char *argv[]) {
   clock_t current = clock();
   clock_t previous = clock();
 
-  printf("Current: 00000000 - 000fffff\n");
+  printf("Current: 00000000 - 0000ffff\n");
 
-  for (; i <= /* 0xa */UINT_MAX; i++) {
+  for (; i <= UINT_MAX; i++) {
     int_pwrd = i;
     isright = 1;
+
+    for (int j = 0; j < IV_LEN[ci_type]; j++)
+      iv[j] = iv_cpy[j];
 
     for (int j = 0; j < PWRD_LEN; j++) {
       password[PWRD_LEN - 1 - j] = (unsigned char) int_pwrd % LEN_CHAR;
@@ -100,16 +108,16 @@ int main (int argc, char *argv[]) {
     }
 
 
-    if ((!(i & 0xfffff)) && (verbose) && (i != 0)) {
+    if ((!(i & 0xffff)) && (verbose) && (i != 0)) {
       previous = current;
       current = clock();
 
-      printf("Current: %08x - %08x | ", i, (i + 0xfffff));
+      printf("Current: %08x - %08x | ", i, (i + 0xffff));
 
-      time_in_seconds = (double) (current - previous) * 1000.0 / CLOCKS_PER_SEC;
-      printf("Current speed: %6.0f c/s | ", (0x100000 / time_in_seconds));
+      time_in_seconds = (double) (current - previous) / CLOCKS_PER_SEC;
+      printf("Current speed: %6.0f c/s | ", (0x10000 / time_in_seconds));
 
-      time_in_seconds = (double) (current - start) * 1000.0 / CLOCKS_PER_SEC;
+      time_in_seconds = (double) (current - start) / CLOCKS_PER_SEC;
       printf("Average speed: %6.0f c/s\n", (i / time_in_seconds));
 
     }
@@ -208,7 +216,7 @@ int main (int argc, char *argv[]) {
   }
 
   if (verbose) {
-    time_in_seconds = (double) (current - start) * 1000.0 / CLOCKS_PER_SEC;
+    time_in_seconds = (double) (current - start) / CLOCKS_PER_SEC;
     printf(" | Average speed: %6.0f c/s\n", (i / time_in_seconds));
   }
 
