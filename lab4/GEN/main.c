@@ -73,9 +73,6 @@ int main (int argc, char *argv[]) {
     generate(nonce, NONCE_LEN);
     generate(iv, IV_LEN[ci_type]);
 
-    // memset(nonce, 0, NONCE_LEN);
-    // memset(iv, 0, IV_LEN[ci_type]);
-
     for (int i = 0; i < IV_LEN[ci_type]; i++)
       iv_cpy[i] = iv[i];
 
@@ -106,7 +103,7 @@ int main (int argc, char *argv[]) {
 
       hmac_sha1((unsigned char *) nonce, NONCE_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) hmac);
 
-      if (HMAC_SHA1_LEN >= KEY_LEN[ci_type]) {
+      if (HMAC_SHA1_LEN > KEY_LEN[ci_type]) {
 
         for(int i = 0; i < KEY_LEN[ci_type]; i++)
           key[i] = hmac[i];
@@ -126,43 +123,24 @@ int main (int argc, char *argv[]) {
       }
     }
 
-    printf("\nOT: ");
 
-    for (int j = 0; j < ot_len; j++) {
-      printf("%02hhx", opentext[j]);
-    }
 
-    printf("\n\n");
+    printf("File %s created.\n", filename);
+
+
 
     if (ci_type == 0) {
 
-      des3_cbc_encrypt((unsigned char *) opentext, ot_len, (unsigned char *) iv, (unsigned char *) key, (unsigned char *) ciphertext);
+      des3_cbc_encrypt(opentext, ot_len, iv, key, ciphertext);
 
     } else {
 
-      aes_cbc_encrypt((unsigned char *) opentext, ot_len, (unsigned char *) iv, (unsigned char *) key, (unsigned char *) ciphertext, KEY_LEN[ci_type] * BYTE_LEN);
+      aes_cbc_encrypt(opentext, ot_len, iv, key, ciphertext, KEY_LEN[ci_type] * BYTE_LEN);
 
     }
 
-    printf("\nСT: ");
 
-    for (int j = 0; j < ot_len; j++) {
-      printf("%02hhx", ciphertext[j]);
-    }
 
-    printf("\n\n");
-
-    printf("NONCE: ");
-    for (int i = 0; i < NONCE_LEN; i++)
-      printf("%02hhx", nonce[i]);
-
-    printf("\n");
-
-    printf("IV: ");
-    for (int i = 0; i < IV_LEN[ci_type]; i++)
-        printf("%02hhx", iv_cpy[i]);
-
-    printf("\n");
 
     file_filling(filename, hash_type, ci_type, nonce, iv_cpy, ciphertext, IV_LEN[ci_type], ot_len);
 

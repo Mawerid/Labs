@@ -96,6 +96,7 @@ int main (int argc, char *argv[]) {
   printf("Current: 00000000 - 0000ffff\n");
 
   for (; i <= UINT_MAX; i++) {
+
     int_pwrd = i;
     isright = 1;
 
@@ -106,6 +107,8 @@ int main (int argc, char *argv[]) {
       password[PWRD_LEN - 1 - j] = (unsigned char) int_pwrd % LEN_CHAR;
       int_pwrd /= LEN_CHAR;
     }
+
+
 
 
     if ((!(i & 0xffff)) && (verbose) && (i != 0)) {
@@ -173,10 +176,17 @@ int main (int argc, char *argv[]) {
     }
 
 
+
+
+
     if (ci_type == 0) {
+
       des3_cbc_decrypt(ciphertext, ct_len, iv, key, opentext);
+
     } else {
+
       aes_cbc_decrypt(ciphertext, ct_len, iv, key, opentext, KEY_LEN[ci_type] * BYTE_LEN);
+
     }
 
 

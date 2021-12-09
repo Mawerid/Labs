@@ -18,12 +18,12 @@
 #define IV_LEN_AES192 16
 #define IV_LEN_AES256 16
 
-#define KEY_LEN_3DES 21
+#define KEY_LEN_3DES 24
 #define KEY_LEN_AES128 16
 #define KEY_LEN_AES192 24
 #define KEY_LEN_AES256 32
 
-#define MAXLEN_3DES 4173
+#define MAXLEN_3DES 4181
 #define MAXLEN_AES128 4181
 #define MAXLEN_AES192 4189
 #define MAXLEN_AES256 4197
@@ -43,9 +43,9 @@
 #define BYTE_LEN 8
 #define LEN_CHAR 256
 #define MAX_TEXT_LEN 4096
-#define MAX_IV_LEN 21
+#define MAX_IV_LEN 16
 #define NONCE_LEN 64
-#define PADS_LEN 65
+#define PADS_LEN 65 
 #define FILENAME_LEN 30
 
 #define HMAC_MD5_LEN 16
