@@ -45,11 +45,12 @@
 #define MAX_TEXT_LEN 4096
 #define MAX_IV_LEN 16
 #define NONCE_LEN 64
-#define PADS_LEN 65 
+#define PADS_LEN 65
 #define FILENAME_LEN 30
 
 #define HMAC_MD5_LEN 16
 #define HMAC_SHA1_LEN 20
+#define HMAC_MAX_LEN 20
 
 int checker(FILE *in);
 

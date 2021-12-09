@@ -16,8 +16,7 @@ int main (int argc, char *argv[]) {
 	int rez;
 	int option_index;
 
-	while ((rez=getopt_long(argc,argv,short_options,
-		long_options,&option_index))!=-1){
+	while ((rez = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1){
 
 		switch (rez){
 			case 'v': {
@@ -81,11 +80,24 @@ int main (int argc, char *argv[]) {
   unsigned char key[KEY_LEN[ci_type]];
   unsigned char opentext[ct_len];
   unsigned char iv_cpy[IV_LEN[ci_type]];
+  unsigned char hmac[HMAC_MAX_LEN];
+  unsigned char tmp_hmac[HMAC_MAX_LEN];
   int isright = 0;
   unsigned i = 0;
+  int delta = 0;
 
-  for (int j = 0; j < IV_LEN[ci_type]; j++)
-    iv_cpy[j] = iv[j];
+  memcpy(iv_cpy, iv, IV_LEN[ci_type]);
+
+
+  if (hash_type == 0) {
+    delta = KEY_LEN[ci_type] - HMAC_MD5_LEN;
+  } else {
+    delta = KEY_LEN[ci_type] - HMAC_SHA1_LEN;
+  }
+
+  if (verbose) {
+    printf("Current: 00000000 - 0000ffff\n");
+  }
 
   double time_in_seconds = 0;
 
@@ -93,15 +105,15 @@ int main (int argc, char *argv[]) {
   clock_t current = clock();
   clock_t previous = clock();
 
-  printf("Current: 00000000 - 0000ffff\n");
 
   for (; i <= UINT_MAX; i++) {
 
     int_pwrd = i;
     isright = 1;
 
-    for (int j = 0; j < IV_LEN[ci_type]; j++)
-      iv[j] = iv_cpy[j];
+    memcpy(iv, iv_cpy, IV_LEN[ci_type]);
+    memset(key, 0, KEY_LEN[ci_type]);
+    memset(opentext, 0, ct_len);
 
     for (int j = 0; j < PWRD_LEN; j++) {
       password[PWRD_LEN - 1 - j] = (unsigned char) int_pwrd % LEN_CHAR;
@@ -109,9 +121,8 @@ int main (int argc, char *argv[]) {
     }
 
 
-
-
     if ((!(i & 0xffff)) && (verbose) && (i != 0)) {
+
       previous = current;
       current = clock();
 
@@ -131,62 +142,36 @@ int main (int argc, char *argv[]) {
 
     if (hash_type == 0) {
 
-      unsigned char hmac[HMAC_MD5_LEN];
-
       hmac_md5(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
-
-      for(int j = 0; j < HMAC_MD5_LEN; j++)
-        key[j] = hmac[j];
-
+      memcpy(key, hmac, HMAC_MD5_LEN);
 
       if (HMAC_MD5_LEN < KEY_LEN[ci_type]) {
 
-        int delta = KEY_LEN[ci_type] - HMAC_MD5_LEN;
-        unsigned char tmp_hmac[HMAC_MD5_LEN];
         hmac_md5(hmac, HMAC_MD5_LEN, password, PWRD_LEN, tmp_hmac);
-
-        for (int j = 0; j < delta; j++)
-          key[KEY_LEN[ci_type] - delta + j] = tmp_hmac[j];
+        memcpy(key + HMAC_MD5_LEN, tmp_hmac, delta);
 
       }
     } else {
 
-      unsigned char hmac[HMAC_SHA1_LEN];
-
       hmac_sha1(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
 
-      if (HMAC_SHA1_LEN >= KEY_LEN[ci_type]) {
-
-        for(int j = 0; j < KEY_LEN[ci_type]; j++)
-          key[j] = hmac[j];
-
+      if (HMAC_SHA1_LEN > KEY_LEN[ci_type]) {
+        memcpy(key, hmac, KEY_LEN[ci_type]);
       } else if (HMAC_SHA1_LEN < KEY_LEN[ci_type]) {
 
-        for(int j = 0; j < HMAC_SHA1_LEN; j++)
-          key[j] = hmac[j];
-
-        int delta = KEY_LEN[ci_type] - HMAC_SHA1_LEN;
-        unsigned char tmp_hmac[HMAC_SHA1_LEN];
+        memcpy(key, hmac, HMAC_SHA1_LEN);
         hmac_md5(hmac, HMAC_SHA1_LEN, password, PWRD_LEN, tmp_hmac);
-
-        for (int j = 0; j < delta; j++)
-          key[KEY_LEN[ci_type] - delta + j] = tmp_hmac[j];
+        memcpy(key + HMAC_SHA1_LEN, tmp_hmac, delta);
 
       }
     }
 
 
 
-
-
     if (ci_type == 0) {
-
       des3_cbc_decrypt(ciphertext, ct_len, iv, key, opentext);
-
     } else {
-
       aes_cbc_decrypt(ciphertext, ct_len, iv, key, opentext, KEY_LEN[ci_type] * BYTE_LEN);
-
     }
 
 
@@ -219,6 +204,7 @@ int main (int argc, char *argv[]) {
   }
 
   current = clock();
+
 
   printf("Found: ");
   for (int j = 0; j < PWRD_LEN; j++) {

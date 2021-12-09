@@ -47,16 +47,14 @@ int main (int argc, char *argv[]) {
 
     create_filename(hash_type, cipher_type, int_password, filename);
 
-    int ot_len = strlen(text) + NULL_CHECK_LEN;
+    int ot_len = strlen(text) + NULL_CHECK_LEN + (strlen(text) + NULL_CHECK_LEN) % IV_LEN[ci_type];
 
     opentext = (unsigned char *) malloc((ot_len) * sizeof(char));
     ciphertext = (unsigned char*) malloc((ot_len) * sizeof(char));
 
-    for (int i = 0; i < NULL_CHECK_LEN; i++)
-      opentext[i] = 0;
 
-    for (int i = 0; i < strlen(text); i++)
-      opentext[i + NULL_CHECK_LEN] = text[i];
+    memset(opentext, 0, ot_len);
+    memcpy(opentext + NULL_CHECK_LEN, text, strlen(text));
 
     for (int i = 0; i < PWRD_LEN; i++) {
       password[PWRD_LEN - 1 - i] = int_password % LEN_CHAR;
@@ -73,52 +71,38 @@ int main (int argc, char *argv[]) {
     generate(nonce, NONCE_LEN);
     generate(iv, IV_LEN[ci_type]);
 
-    for (int i = 0; i < IV_LEN[ci_type]; i++)
-      iv_cpy[i] = iv[i];
+    memcpy(iv_cpy, iv, IV_LEN[ci_type]);
 
 
 
     if (strcmp(hash_type, "md5") == 0) {
 
-      char hmac[HMAC_MD5_LEN];
-
-      hmac_md5((unsigned char *) nonce, NONCE_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) hmac);
-
-      for(int i = 0; i < HMAC_MD5_LEN; i++)
-        key[i] = hmac[i];
+      unsigned char hmac[HMAC_MD5_LEN];
+      hmac_md5(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
+      memcpy(key, hmac, HMAC_MD5_LEN);
 
       if (HMAC_MD5_LEN < KEY_LEN[ci_type]) {
 
         int delta = KEY_LEN[ci_type] - HMAC_MD5_LEN;
-        char tmp_hmac[HMAC_MD5_LEN];
-        hmac_md5((unsigned char *) hmac, HMAC_MD5_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) tmp_hmac);
-
-        for (int i = 0; i < delta; i++)
-          key[KEY_LEN[ci_type] - delta + i] = tmp_hmac[i];
+        unsigned char tmp_hmac[HMAC_MD5_LEN];
+        hmac_md5(hmac, HMAC_MD5_LEN, password, PWRD_LEN, tmp_hmac);
+        memcpy(key + HMAC_MD5_LEN, tmp_hmac, delta);
 
       }
     } else {
 
-      char hmac[HMAC_SHA1_LEN];
-
-      hmac_sha1((unsigned char *) nonce, NONCE_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) hmac);
+      unsigned char hmac[HMAC_SHA1_LEN];
+      hmac_sha1(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
 
       if (HMAC_SHA1_LEN > KEY_LEN[ci_type]) {
-
-        for(int i = 0; i < KEY_LEN[ci_type]; i++)
-          key[i] = hmac[i];
-
+        memcpy(key, hmac, KEY_LEN[ci_type]);
       } else if (HMAC_SHA1_LEN < KEY_LEN[ci_type]) {
 
-        for(int i = 0; i < HMAC_SHA1_LEN; i++)
-          key[i] = hmac[i];
-
+        memcpy(key, hmac, HMAC_SHA1_LEN);
         int delta = KEY_LEN[ci_type] - HMAC_SHA1_LEN;
-        char tmp_hmac[HMAC_SHA1_LEN];
-        hmac_md5((unsigned char *) hmac, HMAC_SHA1_LEN, (unsigned char *) password, PWRD_LEN, (unsigned char *) tmp_hmac);
-
-        for (int i = 0; i < delta; i++)
-          key[KEY_LEN[ci_type] - delta + i] = tmp_hmac[i];
+        unsigned char tmp_hmac[HMAC_SHA1_LEN];
+        hmac_md5(hmac, HMAC_SHA1_LEN, password, PWRD_LEN, tmp_hmac);
+        memcpy(key + HMAC_SHA1_LEN, tmp_hmac, delta);
 
       }
     }
@@ -130,16 +114,10 @@ int main (int argc, char *argv[]) {
 
 
     if (ci_type == 0) {
-
       des3_cbc_encrypt(opentext, ot_len, iv, key, ciphertext);
-
     } else {
-
       aes_cbc_encrypt(opentext, ot_len, iv, key, ciphertext, KEY_LEN[ci_type] * BYTE_LEN);
-
     }
-
-
 
 
     file_filling(filename, hash_type, ci_type, nonce, iv_cpy, ciphertext, IV_LEN[ci_type], ot_len);
