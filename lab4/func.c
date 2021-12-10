@@ -92,7 +92,6 @@ unsigned str_hex(const char *str){
 void generate(unsigned char *string, int len) {
   for (int i = 0; i < len; i++)
     string[i] = (unsigned char) (rand() % LEN_CHAR);
-
 }
 
 void md5(unsigned char *data, size_t data_len, unsigned char *hash) {

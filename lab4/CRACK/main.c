@@ -160,7 +160,7 @@ int main (int argc, char *argv[]) {
       } else if (HMAC_SHA1_LEN < KEY_LEN[ci_type]) {
 
         memcpy(key, hmac, HMAC_SHA1_LEN);
-        hmac_md5(hmac, HMAC_SHA1_LEN, password, PWRD_LEN, tmp_hmac);
+        hmac_sha1(hmac, HMAC_SHA1_LEN, password, PWRD_LEN, tmp_hmac);
         memcpy(key + HMAC_SHA1_LEN, tmp_hmac, delta);
 
       }

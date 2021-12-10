@@ -101,7 +101,7 @@ int main (int argc, char *argv[]) {
         memcpy(key, hmac, HMAC_SHA1_LEN);
         int delta = KEY_LEN[ci_type] - HMAC_SHA1_LEN;
         unsigned char tmp_hmac[HMAC_SHA1_LEN];
-        hmac_md5(hmac, HMAC_SHA1_LEN, password, PWRD_LEN, tmp_hmac);
+        hmac_sha1(hmac, HMAC_SHA1_LEN, password, PWRD_LEN, tmp_hmac);
         memcpy(key + HMAC_SHA1_LEN, tmp_hmac, delta);
 
       }
