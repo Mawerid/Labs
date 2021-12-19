@@ -47,7 +47,7 @@ int main (int argc, char *argv[]) {
 
     create_filename(hash_type, cipher_type, int_password, filename);
 
-    int ot_len = strlen(text) + NULL_CHECK_LEN + (strlen(text) + NULL_CHECK_LEN) % IV_LEN[ci_type];
+    int ot_len = strlen(text) + NULL_CHECK_LEN + 16 - (strlen(text) + NULL_CHECK_LEN) % IV_LEN[ci_type];
 
     opentext = (unsigned char *) malloc((ot_len) * sizeof(char));
     ciphertext = (unsigned char*) malloc((ot_len) * sizeof(char));
