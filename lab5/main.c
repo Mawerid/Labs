@@ -5,12 +5,12 @@ int main (int argc, char *argv[]) {
   unsigned enc = 2;
 
   unsigned int_pass;
-  char *in_filename;
-  char *out_filename;
-  char *str_hmac_type;
-  char *str_alg_type;
-  char *tmp_nonce;
-  char *tmp_iv;
+  char in_filename[30];
+  char out_filename[30];
+  int hmac_type = 1;
+  int alg_type = 1;
+  char tmp_nonce[NONCE_LEN*2];
+  char tmp_iv[MAX_IV_LEN*2];
 
   struct check info;
   info.en = 0;
@@ -26,7 +26,7 @@ int main (int argc, char *argv[]) {
 
   opterr = 0;
 
-	const char *short_options = "edp:i:o:h:a:n:v:s";
+	const char *short_options = "edp:i:o:h:a:n:v:";
 	const struct option long_options[] = {
 		{"enc", no_argument, NULL, 'e'},
 		{"dec", no_argument, NULL, 'd'},
@@ -60,27 +60,47 @@ int main (int argc, char *argv[]) {
         info.password++;
         break;
       case 'i':
-        in_filename = optarg;
+        memcpy(in_filename, optarg, strlen(optarg));
         info.input++;
         break;
       case 'o':
-        out_filename = optarg;
+        memcpy(out_filename, optarg, strlen(optarg));
         info.output++;
         break;
       case 'h':
-        str_hmac_type = optarg;
+        if (!(strcmp(optarg, "md5")))
+          hmac_type = 0;
+        else if (!(strcmp(optarg, "sha1")))
+          hmac_type  = 1;
+        else {
+          printf("Sorry, incorrect hash type.\n");
+          help();
+          return 0;
+        }
         info.hmac++;
         break;
       case 'a':
-        str_alg_type = optarg;
+        if (!(strcmp(optarg, "3des")))
+          alg_type = 0;
+        else if (!(strcmp(optarg, "aes128")))
+          alg_type  = 1;
+        else if (!(strcmp(optarg, "aes192")))
+          alg_type  = 2;
+        else if (!(strcmp(optarg, "aes256")))
+          alg_type  = 3;
+        else {
+          printf("Sorry, incorrect algorythm type.\n");
+          help();
+          return 0;
+        }
         info.alg++;
         break;
       case 'n':
-        tmp_nonce = optarg;
+        memcpy(tmp_nonce, optarg, strlen(optarg));
         info.nonce++;
         break;
       case 'v':
-        tmp_iv = optarg;
+        memcpy(tmp_iv, optarg, strlen(optarg));
         info.iv++;
         break;
       case 's':
@@ -89,10 +109,12 @@ int main (int argc, char *argv[]) {
 			case '?': default: {
         printf("Please, check parameters.\n\n");
         help();
+        return 0;
 				break;
 			};
 		};
 	};
+
 
   if (wrong(info)) {
     printf("Please, check parameters.\n\n");
@@ -105,19 +127,6 @@ int main (int argc, char *argv[]) {
   }
 
 
-
-  if (!((strcmp(str_hmac_type, "md5") == 0) || (strcmp(str_hmac_type, "sha1") == 0))) {
-
-    printf("Sorry, incorrect hash type.\n");
-    return 0;
-
-  } else if (!((strcmp(str_alg_type, "3des") == 0) || (strcmp(str_alg_type, "aes128") == 0) ||
-                  (strcmp(str_alg_type, "aes192") == 0) || (strcmp(str_alg_type, "aes256") == 0))) {
-
-    printf("Sorry, incorrect cipher type.\n");
-    return 0;
-
-  }
 
   int IV_LEN[NUM_TYPES_CIPHERS] = {IV_LEN_3DES, IV_LEN_AES128, IV_LEN_AES192, IV_LEN_AES256}; // depend of cipher type
   int KEY_LEN[NUM_TYPES_CIPHERS] = {KEY_LEN_3DES, KEY_LEN_AES128, KEY_LEN_AES192, KEY_LEN_AES256};
@@ -132,8 +141,6 @@ int main (int argc, char *argv[]) {
 
 
   unsigned char password[PWRD_LEN];
-  int hmac_type = 1;
-  int alg_type = 1;
   unsigned char nonce[NONCE_LEN];
   unsigned char iv[MAX_IV_LEN];
   unsigned char iv_cpy[MAX_IV_LEN];
@@ -141,23 +148,12 @@ int main (int argc, char *argv[]) {
   unsigned char opentext[MAX_TEXT_LEN];
   int ct_len = 0;
 
-  if (strcmp(str_alg_type, "3des") == 0) {
-    alg_type = DES3;
-  } else if (strcmp(str_alg_type, "aes128") == 0) {
-    alg_type = AES128;
-  } else if (strcmp(str_alg_type, "aes192") == 0) {
-    alg_type = AES192;
-  } else {
-    alg_type = AES256;
-  }
-
-  if (strcmp(str_hmac_type, "md5") == 0)
-    hmac_type = 0;
 
   for (int i = 0; i < PWRD_LEN; i++) {
     password[PWRD_LEN - 1 - i] = int_pass % LEN_CHAR;
     int_pass /= LEN_CHAR;
   }
+
 
   if (enc == 0) {
     int pass;
@@ -179,9 +175,15 @@ int main (int argc, char *argv[]) {
   } else {
     char letter;
 
+    memset(opentext, 0, NULL_CHECK_LEN);
+    ct_len += NULL_CHECK_LEN;
+
     for(; fread(&letter, sizeof(char), 1, in) == 1; ct_len++)
       opentext[ct_len] = (unsigned char) letter;
 
+    unsigned delta = 16 - ct_len % IV_LEN[alg_type];
+    memset((opentext + ct_len), ' ', delta);
+    ct_len += delta;
     char tmp[2];
     srand(time(NULL));
     if (info.nonce == 0)
@@ -226,11 +228,11 @@ int main (int argc, char *argv[]) {
     }
   } else {
 
-      unsigned char hmac[HMAC_SHA1_LEN];
-      hmac_sha1(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
+    unsigned char hmac[HMAC_SHA1_LEN];
+    hmac_sha1(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
 
-      if (HMAC_SHA1_LEN > KEY_LEN[alg_type]) {
-        memcpy(key, hmac, KEY_LEN[alg_type]);
+    if (HMAC_SHA1_LEN > KEY_LEN[alg_type]) {
+      memcpy(key, hmac, KEY_LEN[alg_type]);
     } else if (HMAC_SHA1_LEN < KEY_LEN[alg_type]) {
 
       memcpy(key, hmac, HMAC_SHA1_LEN);
@@ -243,7 +245,6 @@ int main (int argc, char *argv[]) {
   }
 
 
-
   if (enc) {
     if (alg_type == 0) {
       des3_cbc_encrypt(opentext, ct_len, iv, key, ciphertext);
@@ -251,7 +252,7 @@ int main (int argc, char *argv[]) {
       aes_cbc_encrypt(opentext, ct_len, iv, key, ciphertext, KEY_LEN[alg_type] * BYTE_LEN);
     }
 
-    file_filling(out_filename, str_hmac_type, alg_type, nonce, iv_cpy, ciphertext, IV_LEN[alg_type], ct_len);
+    file_filling(out_filename, hmac_type, alg_type, nonce, iv_cpy, ciphertext, IV_LEN[alg_type], ct_len);
   } else {
     if (alg_type == 0) {
       des3_cbc_decrypt(ciphertext, ct_len, iv, key, opentext);
@@ -259,10 +260,17 @@ int main (int argc, char *argv[]) {
       aes_cbc_decrypt(ciphertext, ct_len, iv, key, opentext, KEY_LEN[alg_type] * BYTE_LEN);
     }
 
-    FILE * out;
+    for (int j = 0; j < NULL_CHECK_LEN; j++) {
+      if (opentext[j] != 0){
+        printf("Incorrect password, please, try again.\n");
+        return 0;
+      }
+    }
+
+    FILE *out;
     out = fopen(out_filename, "wb");
 
-    for(int i = 0; i < ct_len; i++) {
+    for(int i = NULL_CHECK_LEN; i < ct_len; i++) {
       fprintf(out, "%c", opentext[i]);
     }
 

@@ -103,4 +103,4 @@ void hmac_md5(unsigned char *text, size_t text_len, unsigned char *key, size_t k
 
 void hmac_sha1(unsigned char *text, size_t text_len, unsigned char *key, size_t key_len, unsigned char *md);
 
-void file_filling(char *filename, char *hash_type, int ci_type, unsigned char *nonce, unsigned char *iv, unsigned char *text, int iv_len, int text_len);
+void file_filling(char *filename, int hash_type, int ci_type, unsigned char *nonce, unsigned char *iv, unsigned char *text, int iv_len, int text_len);

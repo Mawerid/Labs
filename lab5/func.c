@@ -275,15 +275,11 @@ void readinfo(FILE *in, int *hash_type, int *ci_type, unsigned char *nonce, unsi
 
 }
 
-void file_filling(char *filename, char *hash_type, int ci_type, unsigned char *nonce, unsigned char *iv, unsigned char *text, int iv_len, int text_len) {
+void file_filling(char *filename, int hash_type, int ci_type, unsigned char *nonce, unsigned char *iv, unsigned char *text, int iv_len, int text_len) {
   FILE * output;
   output = fopen(filename, "wb");
 
-  if (strcmp(hash_type, "md5") == 0) {
-    fprintf(output, "ENC%c", 0);
-  } else {
-    fprintf(output, "ENC%c", 1);
-  }
+  fprintf(output, "ENC%c", hash_type);
 
   fprintf(output, "%c", ci_type);
 
