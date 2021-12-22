@@ -14,7 +14,7 @@ void help() {
   printf(" -a (--alg) with algorythm type (3des, aes128, aes192, aes256), default - aes128;\n");
   printf(" -n (--nonce) with nonce data in HEX, default - generate randomly;\n");
   printf(" -v (--iv) with initial vector in HEX, default - generate randomly;\n");
-  printf(" -s (--speed) (temporarily for nothing)\n");
+  printf(" -s (--speed) (temporarily for nothing)\n\n");
 }
 
 unsigned wrong(struct check info) {
