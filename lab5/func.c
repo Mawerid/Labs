@@ -1,7 +1,20 @@
 #include "func.h"
 
 void help() {
-  printf("HELP\n");
+  printf("ENCRYPT/DECRYPT application.\n");
+  printf("Version: 1.0\n");
+  printf("--------------------------------------\n");
+  printf("For proper usage it needs at least 4 parameters:\n");
+  printf(" -e (--enc) or -d (--dec) for encryption or decryption mode;\n");
+  printf(" -p (--pass) with 4 bytes password (example: ffffffff);\n");
+  printf(" -i (--input) with name of input file with data;\n");
+  printf(" -o (--output) with name of output file (not necessary exist);\n");
+  printf("All other parameters are optional and can be added only in encryption mode:\n");
+  printf(" -h (--hmac) with hmac type (md5 or sha1), default - sha1;\n");
+  printf(" -a (--alg) with algorythm type (3des, aes128, aes192, aes256), default - aes128;\n");
+  printf(" -n (--nonce) with nonce data in HEX, default - generate randomly;\n");
+  printf(" -v (--iv) with initial vector in HEX, default - generate randomly;\n");
+  printf(" -s (--speed) (temporarily for nothing)\n");
 }
 
 unsigned wrong(struct check info) {
