@@ -52,6 +52,9 @@
 #define HMAC_SHA1_LEN 20
 #define HMAC_MAX_LEN 20
 
+
+void help();
+
 int checker(FILE *in);
 
 void readinfo(FILE *in, int *hash_type, int *ci_type, unsigned char *nonce, unsigned char *iv, unsigned char *ciphertext, int *ct_len);

@@ -4,12 +4,15 @@ int main (int argc, char *argv[]) {
 
   int verbose = 0;
   int problem = 0;
+  int speed = 0;
 
   opterr = 0;
 
-	const char *short_options = "v";
+	const char *short_options = "vsh";
 	const struct option long_options[] = {
 		{"verbose", no_argument, NULL, 'v'},
+    {"speed", no_argument, NULL, 's'},
+    {"help", no_argument, NULL, 'h'},
 		{NULL, 0, NULL, 0}
 	};
 
@@ -22,6 +25,14 @@ int main (int argc, char *argv[]) {
 			case 'v': {
 				verbose = 1;
 				break;
+			};
+      case 's': {
+				speed = 1;
+				break;
+			};
+      case 'h': {
+				help();
+        return 0;
 			};
 			case '?': default: {
         problem = 1;

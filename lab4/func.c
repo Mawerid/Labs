@@ -1,5 +1,12 @@
 #include "func.h"
 
+void help() {
+  printf("Here possible parameters for this application:\n");
+  printf(" -v (--verbose) to show speed and current position\n");
+  printf(" -s (--speed) to increase speed of search\n");
+  printf(" -h (--help) to show this message\n\n");
+}
+
 int checker(FILE *in) {
   char letter;
   int i;
