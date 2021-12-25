@@ -4,6 +4,9 @@
 #include <time.h>
 #include <limits.h>
 #include <getopt.h>
+#include <sys/times.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <openssl/md5.h>
 #include <openssl/sha.h>
 #include <openssl/des.h>
