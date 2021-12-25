@@ -110,111 +110,292 @@ int main (int argc, char *argv[]) {
     printf("Current: 00000000 - 0000ffff\n");
   }
 
+
+  struct tms tmsstart, tmsend;
+
+  clock_t start;
+  clock_t current;
+  clock_t previous;
+
+  pid_t pid;
+
+  start = times(&tmsstart);
+  current = times(&tmsend);
+
   double time_in_seconds = 0;
 
-  clock_t start = clock();
-  clock_t current = clock();
-  clock_t previous = clock();
+  if (speed) {
+    pid = fork();
+
+    if (pid == 0) {
+
+      for (i = 0; i <= UINT_MAX; i += 2) {
+
+        int_pwrd = i;
+        isright = 1;
+
+        memcpy(iv, iv_cpy, IV_LEN[ci_type]);
+        memset(key, 0, KEY_LEN[ci_type]);
+        memset(opentext, 0, ct_len);
+
+        for (int j = 0; j < PWRD_LEN; j++) {
+          password[PWRD_LEN - 1 - j] = (unsigned char) int_pwrd % LEN_CHAR;
+          int_pwrd /= LEN_CHAR;
+        }
 
 
-  for (; i <= UINT_MAX; i++) {
+        if ((!(i & 0xffff)) && (verbose) && (i != 0)) {
 
-    int_pwrd = i;
-    isright = 1;
+          previous = current;
+          current = times(&tmsend);
 
-    memcpy(iv, iv_cpy, IV_LEN[ci_type]);
-    memset(key, 0, KEY_LEN[ci_type]);
-    memset(opentext, 0, ct_len);
+          printf("Current: %08x - %08x | ", i, (i + 0xffff));
 
-    for (int j = 0; j < PWRD_LEN; j++) {
-      password[PWRD_LEN - 1 - j] = (unsigned char) int_pwrd % LEN_CHAR;
-      int_pwrd /= LEN_CHAR;
-    }
+          time_in_seconds = (double) (current - previous) / CLOCKS_PER_SEC;
+          printf("Current speed: %6.0f c/s | ", (0x10000 / time_in_seconds));
 
+          time_in_seconds = (double) (current - start) / CLOCKS_PER_SEC;
+          printf("Average speed: %6.0f c/s\n", (i / time_in_seconds));
 
-    if ((!(i & 0xffff)) && (verbose) && (i != 0)) {
-
-      previous = current;
-      current = clock();
-
-      printf("Current: %08x - %08x | ", i, (i + 0xffff));
-
-      time_in_seconds = (double) (current - previous) / CLOCKS_PER_SEC;
-      printf("Current speed: %6.0f c/s | ", (0x10000 / time_in_seconds));
-
-      time_in_seconds = (double) (current - start) / CLOCKS_PER_SEC;
-      printf("Average speed: %6.0f c/s\n", (i / time_in_seconds));
-
-    }
+        }
 
 
 
 
+        if (hash_type == 0) {
 
-    if (hash_type == 0) {
+          hmac_md5(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
+          memcpy(key, hmac, HMAC_MD5_LEN);
 
-      hmac_md5(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
-      memcpy(key, hmac, HMAC_MD5_LEN);
+          if (HMAC_MD5_LEN < KEY_LEN[ci_type]) {
 
-      if (HMAC_MD5_LEN < KEY_LEN[ci_type]) {
+            hmac_md5(hmac, HMAC_MD5_LEN, password, PWRD_LEN, tmp_hmac);
+            memcpy(key + HMAC_MD5_LEN, tmp_hmac, delta);
 
-        hmac_md5(hmac, HMAC_MD5_LEN, password, PWRD_LEN, tmp_hmac);
-        memcpy(key + HMAC_MD5_LEN, tmp_hmac, delta);
+          }
+        } else {
+
+          hmac_sha1(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
+
+          if (HMAC_SHA1_LEN > KEY_LEN[ci_type]) {
+            memcpy(key, hmac, KEY_LEN[ci_type]);
+          } else if (HMAC_SHA1_LEN < KEY_LEN[ci_type]) {
+
+            memcpy(key, hmac, HMAC_SHA1_LEN);
+            hmac_sha1(hmac, HMAC_SHA1_LEN, password, PWRD_LEN, tmp_hmac);
+            memcpy(key + HMAC_SHA1_LEN, tmp_hmac, delta);
+
+          }
+        }
+
+
+
+        if (ci_type == 0) {
+          des3_cbc_decrypt(ciphertext, ct_len, iv, key, opentext);
+        } else {
+          aes_cbc_decrypt(ciphertext, ct_len, iv, key, opentext, KEY_LEN[ci_type] * BYTE_LEN);
+        }
+
+
+        for (int j = 0; j < NULL_CHECK_LEN; j++) {
+          if (opentext[j] != 0){
+            isright = 0;
+            break;
+          }
+        }
+
+        if (i == UINT_MAX)
+          break;
+
+        if (isright)
+          break;
 
       }
-    } else {
 
-      hmac_sha1(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
 
-      if (HMAC_SHA1_LEN > KEY_LEN[ci_type]) {
-        memcpy(key, hmac, KEY_LEN[ci_type]);
-      } else if (HMAC_SHA1_LEN < KEY_LEN[ci_type]) {
+    } else if (!isright){
 
-        memcpy(key, hmac, HMAC_SHA1_LEN);
-        hmac_sha1(hmac, HMAC_SHA1_LEN, password, PWRD_LEN, tmp_hmac);
-        memcpy(key + HMAC_SHA1_LEN, tmp_hmac, delta);
+      for (i = 1; i <= UINT_MAX; i += 2) {
+
+        int_pwrd = i;
+        isright = 1;
+
+        memcpy(iv, iv_cpy, IV_LEN[ci_type]);
+        memset(key, 0, KEY_LEN[ci_type]);
+        memset(opentext, 0, ct_len);
+
+        for (int j = 0; j < PWRD_LEN; j++) {
+          password[PWRD_LEN - 1 - j] = (unsigned char) int_pwrd % LEN_CHAR;
+          int_pwrd /= LEN_CHAR;
+        }
+
+
+        if ((!(i & 0xffff)) && (verbose) && (i != 0)) {
+
+          previous = current;
+          current = times(&tmsend);
+
+          printf("Current: %08x - %08x | ", i, (i + 0xffff));
+
+          time_in_seconds = (double) (current - previous) / CLOCKS_PER_SEC;
+          printf("Current speed: %6.0f c/s | ", (0x10000 / time_in_seconds));
+
+          time_in_seconds = (double) (current - start) / CLOCKS_PER_SEC;
+          printf("Average speed: %6.0f c/s\n", (i / time_in_seconds));
+
+        }
+
+
+
+
+        if (hash_type == 0) {
+
+          hmac_md5(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
+          memcpy(key, hmac, HMAC_MD5_LEN);
+
+          if (HMAC_MD5_LEN < KEY_LEN[ci_type]) {
+
+            hmac_md5(hmac, HMAC_MD5_LEN, password, PWRD_LEN, tmp_hmac);
+            memcpy(key + HMAC_MD5_LEN, tmp_hmac, delta);
+
+          }
+        } else {
+
+          hmac_sha1(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
+
+          if (HMAC_SHA1_LEN > KEY_LEN[ci_type]) {
+            memcpy(key, hmac, KEY_LEN[ci_type]);
+          } else if (HMAC_SHA1_LEN < KEY_LEN[ci_type]) {
+
+            memcpy(key, hmac, HMAC_SHA1_LEN);
+            hmac_sha1(hmac, HMAC_SHA1_LEN, password, PWRD_LEN, tmp_hmac);
+            memcpy(key + HMAC_SHA1_LEN, tmp_hmac, delta);
+
+          }
+        }
+
+
+
+        if (ci_type == 0) {
+          des3_cbc_decrypt(ciphertext, ct_len, iv, key, opentext);
+        } else {
+          aes_cbc_decrypt(ciphertext, ct_len, iv, key, opentext, KEY_LEN[ci_type] * BYTE_LEN);
+        }
+
+
+        for (int j = 0; j < NULL_CHECK_LEN; j++) {
+          if (opentext[j] != 0){
+            isright = 0;
+            break;
+          }
+        }
+
+        if (i == UINT_MAX)
+          break;
+
+        if (isright)
+          break;
 
       }
+
+
     }
-
-
-
-    if (ci_type == 0) {
-      des3_cbc_decrypt(ciphertext, ct_len, iv, key, opentext);
-    } else {
-      aes_cbc_decrypt(ciphertext, ct_len, iv, key, opentext, KEY_LEN[ci_type] * BYTE_LEN);
-    }
-
-
-    // printf("\nMessage's text is: \n\n");
-    // for (int j = NULL_CHECK_LEN; j < ct_len; j++) {
-    //   printf("%c", opentext[j]);
-    // }
-    //
-    // printf("\n\n");
-    // for (int j = 0; j < ct_len; j++) {
-    //   printf("%02hhx", opentext[j]);
-    // }
-    //
-    // printf("\n\n");
-
-
-    for (int j = 0; j < NULL_CHECK_LEN; j++) {
-      if (opentext[j] != 0){
-        isright = 0;
-        break;
-      }
-    }
-
-    if (i == UINT_MAX)
-      break;
-
-    if (isright)
-      break;
 
   }
 
-  current = clock();
+
+
+
+
+  if (!speed) {
+    for (; i <= UINT_MAX; i++) {
+
+      int_pwrd = i;
+      isright = 1;
+
+      memcpy(iv, iv_cpy, IV_LEN[ci_type]);
+      memset(key, 0, KEY_LEN[ci_type]);
+      memset(opentext, 0, ct_len);
+
+      for  (int j = 0; j < PWRD_LEN; j++) {
+        password[PWRD_LEN - 1 - j] = (unsigned char) int_pwrd % LEN_CHAR;
+        int_pwrd /= LEN_CHAR;
+      }
+
+
+      if ((!(i & 0xffff)) && (verbose) && (i != 0)) {
+
+        previous = current;
+        current = times(&tmsend);
+
+        printf("Current: %08x - %08x | ", i, (i + 0xffff));
+
+        time_in_seconds = (double) (current - previous) / CLOCKS_PER_SEC;
+        printf("Current speed: %6.0f c/s | ", (0x10000 / time_in_seconds));
+
+        time_in_seconds = (double) (current - start) / CLOCKS_PER_SEC;
+        printf("Average speed: %6.0f c/s\n", (i / time_in_seconds));
+
+      }
+
+
+
+
+      if (hash_type == 0) {
+
+        hmac_md5(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
+        memcpy(key, hmac, HMAC_MD5_LEN);
+
+        if (HMAC_MD5_LEN < KEY_LEN[ci_type]) {
+
+          hmac_md5(hmac, HMAC_MD5_LEN, password, PWRD_LEN, tmp_hmac);
+          memcpy(key + HMAC_MD5_LEN, tmp_hmac, delta);
+
+        }
+      } else {
+
+        hmac_sha1(nonce, NONCE_LEN, password, PWRD_LEN, hmac);
+
+        if (HMAC_SHA1_LEN > KEY_LEN[ci_type]) {
+          memcpy(key, hmac, KEY_LEN[ci_type]);
+        } else if (HMAC_SHA1_LEN < KEY_LEN[ci_type]) {
+
+          memcpy(key, hmac, HMAC_SHA1_LEN);
+          hmac_sha1(hmac, HMAC_SHA1_LEN, password, PWRD_LEN, tmp_hmac);
+          memcpy(key + HMAC_SHA1_LEN, tmp_hmac, delta);
+
+        }
+      }
+
+
+
+      if (ci_type == 0) {
+        des3_cbc_decrypt(ciphertext, ct_len, iv, key, opentext);
+      } else {
+        aes_cbc_decrypt(ciphertext, ct_len, iv, key, opentext, KEY_LEN[ci_type] * BYTE_LEN);
+      }
+
+
+      for (int j = 0; j < NULL_CHECK_LEN; j++) {
+        if (opentext[j] != 0){
+          isright = 0;
+          break;
+        }
+      }
+
+      if (i == UINT_MAX)
+        break;
+
+      if (isright)
+        break;
+
+    }
+  }
+
+  if (speed)
+    waitpid(pid, NULL, 0);
+
+  current = times(&tmsend);
 
 
   printf("Found: ");
